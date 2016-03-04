@@ -98,7 +98,7 @@ PhotoSphereViewer.prototype.destroy = function() {
  * @param transition (boolean, optional)
  * @return (D.promise)
  */
-PhotoSphereViewer.prototype.setPanorama = function(path, position, transition) {
+PhotoSphereViewer.prototype.setPanorama = function(path, position, transition,zoom) {
   if (typeof position == 'boolean') {
     transition = position;
     position = undefined;
@@ -110,6 +110,20 @@ PhotoSphereViewer.prototype.setPanorama = function(path, position, transition) {
     this.stopAutorotate();
     this.stopAnimation();
   }
+  
+  if(zoom){
+	    // the user has given us a default zoom-in value
+        // but we can only change it once we have a rendered scene 
+        // so make a one off event for it
+        var defaultZoomin = function () {
+            this.off('render', defaultZoomin);
+            this.prop.zoom_lvl = zoom;
+            this.zoom(zoom);
+        }
+        if (zoom != undefined)
+            this.on('render', defaultZoomin);
+  }
+  
 
   this.config.panorama = path;
 

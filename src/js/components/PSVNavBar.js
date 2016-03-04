@@ -78,6 +78,10 @@ PSVNavBar.prototype.create = function() {
           this.items.push(new PSVNavBarCaption(this, this.psv.config.caption));
           break;
 
+		case 'scenes':
+		this.items.push(new PSVNavBarScenesButton(this));
+		break;
+		  
         case 'spacer':
           button = 'spacer-5';
         /* falls through */
