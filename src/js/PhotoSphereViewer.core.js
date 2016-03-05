@@ -113,7 +113,8 @@ PhotoSphereViewer.prototype._loadTexture = function(pano_data) {
     }
 
     var new_width = Math.min(pano_data.full_width, max_width);
-    var r = new_width / pano_data.full_width;
+	self.prop.size.image_ratio = new_width / pano_data.full_width;
+    var r = self.prop.size.image_ratio;
 
     pano_data.full_width *= r;
     pano_data.full_height *= r;
@@ -201,6 +202,7 @@ PhotoSphereViewer.prototype._createScene = function() {
   this.renderer.setSize(this.prop.size.width, this.prop.size.height);
 
   this.camera = new THREE.PerspectiveCamera(this.config.default_fov, this.prop.size.ratio, 1, 300);
+  this.controls = new THREE.DeviceOrientationControls(this.camera);
   this.camera.position.set(0, 0, 0);
 
   this.scene = new THREE.Scene();
@@ -272,6 +274,8 @@ PhotoSphereViewer.prototype._createScene = function() {
 
   this._bindEvents();
   this.trigger('ready');
+  
+  this.controls.connect();
 };
 
 /**

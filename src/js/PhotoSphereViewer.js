@@ -73,6 +73,7 @@ function PhotoSphereViewer(options) {
   this.passes = {};
   this.scene = null;
   this.camera = null;
+  this.controls = null;
   this.mesh = null;
   this.raycaster = null;
   this.actions = {};
@@ -85,6 +86,7 @@ function PhotoSphereViewer(options) {
     zoom_lvl: 0,
     moving: false,
     zooming: false,
+	editing: false,
     start_mouse_x: 0,
     start_mouse_y: 0,
     mouse_x: 0,
@@ -92,6 +94,7 @@ function PhotoSphereViewer(options) {
     mouse_history: [],
     pinch_dist: 0,
     direction: null,
+	device_gyroscope: false,
     autorotate_reqid: null,
     animation_promise: null,
     start_timeout: null,
@@ -101,7 +104,8 @@ function PhotoSphereViewer(options) {
       height: 0,
       ratio: 0,
       image_width: 0,
-      image_height: 0
+      image_height: 0,
+	  image_ratio: 0
     }
   };
 

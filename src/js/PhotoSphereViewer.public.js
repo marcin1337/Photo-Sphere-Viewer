@@ -9,10 +9,17 @@ PhotoSphereViewer.prototype.load = function() {
  * Performs a render
  */
 PhotoSphereViewer.prototype.render = function() {
-  this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
-  this.camera.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
-  this.camera.lookAt(this.prop.direction);
-  this.camera.updateProjectionMatrix();
+  
+  
+  if( this.prop.device_gyroscope === false){
+		this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
+		this.camera.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
+		this.camera.lookAt(this.prop.direction);
+		this.camera.updateProjectionMatrix();
+  }
+  else{
+	  this.controls.update();
+  }
   if (this.composer) {
     this.composer.render();
   }
@@ -82,12 +89,22 @@ PhotoSphereViewer.prototype.destroy = function() {
   this.renderer = null;
   this.composer = null;
   this.scene = null;
+  this.controls = null;
   this.camera = null;
   this.mesh = null;
   this.raycaster = null;
   this.passes = {};
   this.actions = {};
 };
+
+PhotoSphereViewer.prototype.ToggleEditMode = function () {
+    if (this.prop.editMode) {
+        this.hud.container.style.cursor = 'move';
+    } else {
+        this.hud.container.style.cursor = 'crosshair';
+    }
+    this.prop.editMode = !this.prop.editMode;
+}
 
 /**
  * Load a panorama file
@@ -254,6 +271,27 @@ PhotoSphereViewer.prototype.resize = function(width, height) {
   });
 };
 
+
+PhotoSphereViewer.prototype._rotateLeft = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+    this.animate({longitude: this.prop.longitude - 0.7, latitude: this.prop.latitude}, 300);
+};
+
+PhotoSphereViewer.prototype._rotateRight = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+	this.animate({longitude: this.prop.longitude + 0.7, latitude: this.prop.latitude}, 300);
+};
+
+PhotoSphereViewer.prototype._rotateDown = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude - 0.7}, 300);
+};
+
+PhotoSphereViewer.prototype._rotateUp = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude + 0.7}, 300);
+};
+
 /**
  * Rotate the camera
  * @param position (Object) latitude & longitude or x & y
@@ -374,6 +412,10 @@ PhotoSphereViewer.prototype.toggleFullscreen = function() {
     PSVUtils.exitFullscreen();
   }
 };
+
+PhotoSphereViewer.prototype.ToggleGyroscope = function () {
+    this.prop.device_gyroscope = !this.prop.device_gyroscope;
+}
 
 /**
  * Sets the animation speed

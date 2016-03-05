@@ -245,6 +245,9 @@ PSVHUD.prototype._updateNormalMarker = function(marker) {
   // parse anchor
   marker.anchor = PSVUtils.parsePosition(marker.anchor);
 
+  marker.x = Math.round(marker.x * this.psv.prop.size.image_ratio);
+  marker.y = Math.round(marker.y * this.psv.prop.size.image_ratio);
+  
   // convert texture coordinates to spherical coordinates
   this.psv._cleanPosition(marker);
 
@@ -620,8 +623,21 @@ PSVHUD.prototype._onClick = function(e) {
     this.psv.trigger('unselect-marker');
   }
 
-  if (marker && marker.psvMarker && marker.psvMarker.content) {
-    this.psv.panel.showPanel(marker.psvMarker.content);
+  if (marker && marker.psvMarker) {
+	  switch (marker.psvMarker.type) {
+        case "1":
+            this.psv.panel.showPanel(marker.psvMarker.content);
+            break;
+        case "2":
+            this.psv.trigger('sceneTransition', marker.psvMarker.target_scene);
+            break;
+        case "3":
+            window.open(marker.psvMarker.link);
+            break;
+		default:
+			this.psv.panel.showPanel(marker.psvMarker.content);
+			break;
+    }	     
   }
   else if (this.psv.panel.prop.opened) {
     e.preventDefault(); // prevent the public "click" event
