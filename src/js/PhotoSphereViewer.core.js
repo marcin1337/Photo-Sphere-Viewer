@@ -136,7 +136,7 @@ PhotoSphereViewer.prototype._loadTexture = function(pano_data) {
     self.prop.size.image_width = pano_data.cropped_width;
     self.prop.size.image_height = pano_data.cropped_height;
 
-    var texture = new THREE.Texture(img);
+    var texture = new THREE.Texture(buffer);
     texture.needsUpdate = true;
     texture.minFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;

@@ -9,7 +9,9 @@ function PSVNavBarZoomButton(navbar) {
   this.zoom_value = null;
 
   this.prop = {
-    mousedown: false
+    mousedown: false,
+    buttondown: false,
+    longPressInterval: null
   };
 
   this.create();
@@ -59,8 +61,8 @@ PSVNavBarZoomButton.prototype.create = function() {
   this.psv.container.addEventListener('touchmove', this);
   this.psv.container.addEventListener('mouseup', this);
   this.psv.container.addEventListener('touchend', this);
-  zoom_minus.addEventListener('click', this.psv.zoomOut.bind(this.psv));
-  zoom_plus.addEventListener('click', this.psv.zoomIn.bind(this.psv));
+  zoom_minus.addEventListener('mousedown', this._zoomOut.bind(this));
+  zoom_plus.addEventListener('mousedown', this._zoomIn.bind(this));
 
   this.psv.on('zoom-updated', this);
 
@@ -132,12 +134,46 @@ PSVNavBarZoomButton.prototype._initZoomChangeByTouch = function(evt) {
 };
 
 /**
+ * The user clicked the + button
+ * Zoom in and register long press timer
+ */
+PSVNavBarZoomButton.prototype._zoomIn = function() {
+  this.prop.buttondown = true;
+  this.psv.zoomIn();
+  window.setTimeout(this._startLongPressInterval.bind(this, 1), 200);
+};
+
+/**
+ * The user clicked the - button
+ * Zoom out and register long press timer
+ */
+PSVNavBarZoomButton.prototype._zoomOut = function() {
+  this.prop.buttondown = true;
+  this.psv.zoomOut();
+  window.setTimeout(this._startLongPressInterval.bind(this, -1), 200);
+};
+
+/**
+ * Continue zooming as long as the user press the button
+ * @param value
+ */
+PSVNavBarZoomButton.prototype._startLongPressInterval = function(value) {
+  if (this.prop.buttondown) {
+    this.prop.longPressInterval = window.setInterval(function() {
+      this.psv.zoom(this.psv.prop.zoom_lvl + value);
+    }.bind(this), 50);
+  }
+};
+
+/**
  * The user wants to stop zooming
- * @param evt (Event) The event
  * @return (void)
  */
-PSVNavBarZoomButton.prototype._stopZoomChange = function(evt) {
+PSVNavBarZoomButton.prototype._stopZoomChange = function() {
+  window.clearInterval(this.prop.longPressInterval);
+  this.prop.longPressInterval = null;
   this.prop.mousedown = false;
+  this.prop.buttondown = false;
 };
 
 /**

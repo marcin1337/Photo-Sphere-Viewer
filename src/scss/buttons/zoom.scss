@@ -52,3 +52,24 @@
     }
   }
 }
+
+@media (max-width: 600px) {
+  .psv-navbar .zoom-button {
+    width: auto;
+    padding: 0;
+
+    .range {
+      display: none;
+    }
+
+    .minus, .plus {
+      width: $buttons-height;
+      height: $buttons-height;
+      padding: $buttons-padding;
+
+      svg {
+        top: 0;
+      }
+    }
+  }
+}

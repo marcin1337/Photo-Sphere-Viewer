@@ -23,6 +23,13 @@
   flex-grow: $int;
 }
 
+@mixin flex-shrink($int: 1) {
+  -webkit-flex-shrink: $int;
+  -moz-flex-shrink: $int;
+  -ms-flex-negative: $int;
+  flex-shrink: $int;
+}
+
 @function make-dot-shadow($color, $width, $height) {
   $val: 1px 0 $color;
   $x: 3;

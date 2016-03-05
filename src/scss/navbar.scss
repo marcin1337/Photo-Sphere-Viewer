@@ -22,6 +22,12 @@
     font-family: $caption-font;
   }
 
+  @media (max-width: 800px) {
+    .psv-caption {
+      visibility: hidden;
+    }
+  }
+
   .psv-spacer {
     @for $i from 1 through 10 {
       &.weight-#{$i} {
@@ -32,6 +38,7 @@
 
   .psv-button {
     @include flex-grow(0);
+    @include flex-shrink(0);
     padding: $buttons-padding;
     position: relative;
     cursor: pointer;
