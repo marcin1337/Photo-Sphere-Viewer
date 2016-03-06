@@ -8,18 +8,12 @@ PhotoSphereViewer.prototype.load = function() {
 /**
  * Performs a render
  */
-PhotoSphereViewer.prototype.render = function() {
+PhotoSphereViewer.prototype.render = function() {  
+  this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
+  this.camera.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
+  this.camera.lookAt(this.prop.direction);
+  this.camera.updateProjectionMatrix();
   
-  
-  if( this.prop.device_gyroscope === false){
-		this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
-		this.camera.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
-		this.camera.lookAt(this.prop.direction);
-		this.camera.updateProjectionMatrix();
-  }
-  else{
-	  this.controls.update();
-  }
   if (this.composer) {
     this.composer.render();
   }
@@ -89,7 +83,6 @@ PhotoSphereViewer.prototype.destroy = function() {
   this.renderer = null;
   this.composer = null;
   this.scene = null;
-  this.controls = null;
   this.camera = null;
   this.mesh = null;
   this.raycaster = null;
@@ -412,10 +405,6 @@ PhotoSphereViewer.prototype.toggleFullscreen = function() {
     PSVUtils.exitFullscreen();
   }
 };
-
-PhotoSphereViewer.prototype.ToggleGyroscope = function () {
-    this.prop.device_gyroscope = !this.prop.device_gyroscope;
-}
 
 /**
  * Sets the animation speed

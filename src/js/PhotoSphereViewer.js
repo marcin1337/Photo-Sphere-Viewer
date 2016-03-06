@@ -94,7 +94,6 @@ function PhotoSphereViewer(options) {
     mouse_history: [],
     pinch_dist: 0,
     direction: null,
-	device_gyroscope: false,
     autorotate_reqid: null,
     animation_promise: null,
     start_timeout: null,
