@@ -439,6 +439,34 @@ PhotoSphereViewer.prototype.off = function(name, func) {
   return this;
 };
 
+PhotoSphereViewer.prototype.ToggleEditMode = function () {
+    if (this.prop.editMode) {
+        this.hud.container.style.cursor = 'move';
+    } else {
+        this.hud.container.style.cursor = 'crosshair';
+    }
+    this.prop.editMode = !this.prop.editMode;
+}
+
+PhotoSphereViewer.prototype._rotateLeft = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+    this.animate({longitude: this.prop.longitude - 0.7, latitude: this.prop.latitude}, 300);
+};
+
+PhotoSphereViewer.prototype._rotateRight = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+	this.animate({longitude: this.prop.longitude + 0.7, latitude: this.prop.latitude}, 300);
+};
+
+PhotoSphereViewer.prototype._rotateDown = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude - 0.7}, 300);
+};
+
+PhotoSphereViewer.prototype._rotateUp = function () {
+    // Rotates the sphere && Returns to the equator (latitude = 0)
+	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude + 0.7}, 300);
+};
 /**
  * Triggers an action
  * @param name (string) Action name

@@ -99,6 +99,12 @@ PhotoSphereViewer.prototype._startMove = function(evt) {
   if (this.prop.orientation_reqid || this.prop.autorotate_reqid) {
     return;
   }
+  
+  if (this.prop.editMode) {
+    this._addMarker(event);
+    this.ToggleEditMode();
+	return;
+  }
 
   this.stopAll();
 
@@ -364,3 +370,60 @@ PhotoSphereViewer.prototype._logMouseMove = function(evt) {
   }
 };
 
+PhotoSphereViewer.prototype._translateClientPosToTexturePos = function (evt) {
+  var data = {
+    client_x: parseInt(evt.clientX - this.prop.boundingRect.left),
+    client_y: parseInt(evt.clientY - this.prop.boundingRect.top)
+  };
+
+  if (evt.data) {
+    data = PSVUtils.deepmerge(data, evt.data);
+  }
+
+  var screen = new THREE.Vector2(
+    2 * data.client_x / this.prop.size.width - 1,
+    -2 * data.client_y / this.prop.size.height + 1
+  );
+
+  this.raycaster.setFromCamera(screen, this.camera);
+
+  var intersects = this.raycaster.intersectObjects(this.scene.children);
+
+  if (intersects.length === 1) {
+    var sphericalCoords = this.vector3ToSphericalCoords(intersects[0].point);
+
+    data.longitude = sphericalCoords.longitude;
+    data.latitude = sphericalCoords.latitude;
+
+    var textureCoords = this.sphericalCoordsToTextureCoords(data.longitude, data.latitude);
+
+    data.texture_x = textureCoords.x;
+    data.texture_y = textureCoords.y;
+	return data;
+  }
+}
+
+/**
+* Add marker to canvas
+* @param evt (Event) The event
+* @return (void)
+*/
+PhotoSphereViewer.prototype._addMarker = function (evt) {
+    var data = this._translateClientPosToTexturePos(evt);
+    var newMarker =
+    {
+        id: Date.now(),
+        name: "Marker bez nazwy",
+        tooltip: "Marker bez nazwy",
+        content: '',
+        x: data.texture_x,
+        y: data.texture_y,
+        image: 'content/images/pin2.png',
+        width: 32,
+        height: 32,
+        anchor: 'bottom center'
+    };
+    var newMarker = this.addMarker(newMarker, true);
+    this.trigger('newMarker', newMarker);
+
+};

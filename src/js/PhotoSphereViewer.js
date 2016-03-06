@@ -86,6 +86,7 @@ function PhotoSphereViewer(options) {
     zoom_lvl: 0, // current zoom level
     moving: false, // is the user moving
     zooming: false, // is the user zooming
+	editing: false,
     start_mouse_x: 0, // start x position of the click/touch
     start_mouse_y: 0, // start y position of the click/touch
     mouse_x: 0, // current x position of the cursor
@@ -100,13 +101,14 @@ function PhotoSphereViewer(options) {
     boundingRect: null, // DOMRect of the container
     size: { // size of the container
       width: 0,
-      height: 0
+      height: 0,
+	  image_ratio: 1
     },
     image_size: { // size of the image
       width: 0,
       height: 0,
       original_width: 0,
-      original_height: 0
+      original_height: 0,	  
     },
     pano_data: { // panorama metadata
       full_width: 0,
