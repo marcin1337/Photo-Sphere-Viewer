@@ -74,6 +74,10 @@ PSVNavBar.prototype.create = function() {
           this.items.push(new PSVNavBarFullscreenButton(this));
           break;
 
+        case 'gyroscope':
+          this.items.push(new PSVNavBarGyroscopeButton(this));
+          break;
+
         case 'caption':
           this.items.push(new PSVNavBarCaption(this, this.psv.config.caption));
           break;

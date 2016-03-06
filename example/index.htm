@@ -37,6 +37,7 @@
 <script src="../bower_components/threejs-examples/examples/js/postprocessing/ShaderPass.js"></script>
 <script src="../bower_components/threejs-examples/examples/js/postprocessing/MaskPass.js"></script>
 <script src="../bower_components/threejs-examples/examples/js/shaders/CopyShader.js"></script>
+<script src="../bower_components/threejs-examples/examples/js/controls/DeviceOrientationControls.js"></script>
 <script src="../dist/photo-sphere-viewer.js"></script>
 
 <script type="text/template" id="pin-content">
@@ -112,6 +113,7 @@
         }())
       },
       'caption',
+      'gyroscope',
       'fullscreen'
     ],
     caption: 'Bryce Canyon National Park <b>&copy; Mark Doliner</b>',
@@ -239,6 +241,16 @@
       });
     }
   });
+
+  ['fullscreen-updated', 'size-updated'].forEach(function(event) {
+    PSV.on(event, function(value) {
+      console.log(event + ' ' + JSON.stringify(value));
+    });
+  });
+</script>
+
+<script>
+  document.write('<script src="//' + location.host.split(':')[0] + ':35729/livereload.js" async defer><' + '/script>');
 </script>
 </body>
 </html>

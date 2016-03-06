@@ -106,15 +106,16 @@ PhotoSphereViewer.prototype._loadTexture = function(pano_data) {
       };
     }
 
-    // Size limit for mobile compatibility
-    var max_width = 4096;
+    self.prop.image_size.original_width = pano_data.cropped_width;
+    self.prop.image_size.original_height = pano_data.cropped_height;
+
+    // resize the panorama depending on max allowed texture size
+    var max_width = 4096; // canvas size limit for mobile compatibility
     if (PhotoSphereViewer.SYSTEM.isWebGLSupported) {
       max_width = PhotoSphereViewer.SYSTEM.maxTextureWidth;
     }
 
-    var new_width = Math.min(pano_data.full_width, max_width);
-	self.prop.size.image_ratio = new_width / pano_data.full_width;
-    var r = self.prop.size.image_ratio;
+    var r = Math.min(pano_data.full_width, max_width) / pano_data.full_width;
 
     pano_data.full_width *= r;
     pano_data.full_height *= r;
@@ -126,16 +127,17 @@ PhotoSphereViewer.prototype._loadTexture = function(pano_data) {
     img.width = pano_data.cropped_width;
     img.height = pano_data.cropped_height;
 
-    // Create buffer
+    self.prop.image_size.width = pano_data.cropped_width;
+    self.prop.image_size.height = pano_data.cropped_height;
+    self.prop.pano_data = pano_data;
+
+    // create a new image containing the source image and black for cropped parts
     var buffer = document.createElement('canvas');
     buffer.width = pano_data.full_width;
     buffer.height = pano_data.full_height;
 
     var ctx = buffer.getContext('2d');
     ctx.drawImage(img, pano_data.cropped_x, pano_data.cropped_y, pano_data.cropped_width, pano_data.cropped_height);
-
-    self.prop.size.image_width = pano_data.cropped_width;
-    self.prop.size.image_height = pano_data.cropped_height;
 
     var texture = new THREE.Texture(buffer);
     texture.needsUpdate = true;
@@ -201,8 +203,12 @@ PhotoSphereViewer.prototype._createScene = function() {
   this.renderer = PhotoSphereViewer.SYSTEM.isWebGLSupported && this.config.webgl ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
   this.renderer.setSize(this.prop.size.width, this.prop.size.height);
 
-  this.camera = new THREE.PerspectiveCamera(this.config.default_fov, this.prop.size.ratio, 1, 300);
+  this.camera = new THREE.PerspectiveCamera(this.config.default_fov, this.prop.size.width / this.prop.size.height, 1, 300);
   this.camera.position.set(0, 0, 0);
+
+  if (PSVUtils.checkTHREE('DeviceOrientationControls')) {
+    this.doControls = new THREE.DeviceOrientationControls(this.camera);
+  }
 
   this.scene = new THREE.Scene();
   this.scene.add(this.camera);
@@ -273,7 +279,6 @@ PhotoSphereViewer.prototype._createScene = function() {
 
   this._bindEvents();
   this.trigger('ready');
-  
 };
 
 /**

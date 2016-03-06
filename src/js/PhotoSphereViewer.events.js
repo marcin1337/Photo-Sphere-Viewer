@@ -29,7 +29,7 @@ PhotoSphereViewer.prototype._bindEvents = function() {
 PhotoSphereViewer.prototype.handleEvent = function(e) {
   switch (e.type) {
     // @formatter:off
-    case 'resize':      this._onResize();       break;
+    case 'resize': PSVUtils.throttle(this._onResize(), 50); break;
     case 'mousedown':   this._onMouseDown(e);   break;
     case 'touchstart':  this._onTouchStart(e);  break;
     case 'mouseup':     this._onMouseUp(e);     break;
@@ -47,7 +47,26 @@ PhotoSphereViewer.prototype.handleEvent = function(e) {
  */
 PhotoSphereViewer.prototype._onResize = function() {
   if (this.container.clientWidth != this.prop.size.width || this.container.clientHeight != this.prop.size.height) {
-    this.resize(this.container.clientWidth, this.container.clientHeight);
+    this.prop.size.width = parseInt(this.container.clientWidth);
+    this.prop.size.height = parseInt(this.container.clientHeight);
+    this.prop.boundingRect = this.container.getBoundingClientRect();
+
+    if (this.camera) {
+      this.camera.aspect = this.prop.size.width / this.prop.size.height;
+    }
+
+    if (this.renderer) {
+      this.renderer.setSize(this.prop.size.width, this.prop.size.height);
+      if (this.composer) {
+        this.composer.reset(new THREE.WebGLRenderTarget(this.prop.size.width, this.prop.size.height));
+      }
+      this.render();
+    }
+
+    this.trigger('size-updated', {
+      width: this.prop.size.width,
+      height: this.prop.size.height
+    });
   }
 };
 
@@ -77,96 +96,26 @@ PhotoSphereViewer.prototype._onTouchStart = function(evt) {
  * @param evt (Event) The event
  */
 PhotoSphereViewer.prototype._startMove = function(evt) {
-	
-  if (this.prop.editMode) {
-    this._addMarker(event);
-    this.ToggleEditMode();
+  if (this.prop.orientation_reqid || this.prop.autorotate_reqid) {
+    return;
   }
-  else{	
-    this.stopAutorotate();
-    this.stopAnimation();
-    
-    this.prop.mouse_x = this.prop.start_mouse_x = parseInt(evt.clientX);
-    this.prop.mouse_y = this.prop.start_mouse_y = parseInt(evt.clientY);
-    this.prop.moving = true;
-    this.prop.zooming = false;
-    
-    this.prop.mouse_history.length = 0;
-    this._logMouseMove(evt);
-   }
+
+  this.stopAll();
+
+  this.prop.mouse_x = this.prop.start_mouse_x = parseInt(evt.clientX);
+  this.prop.mouse_y = this.prop.start_mouse_y = parseInt(evt.clientY);
+  this.prop.moving = true;
+  this.prop.zooming = false;
+
+  this.prop.mouse_history.length = 0;
+  this._logMouseMove(evt);
 };
-
-
-/**
-* Add marker to canvas
-* @param evt (Event) The event
-* @return (void)
-*/
-PhotoSphereViewer.prototype._addMarker = function (evt) {
-    var data = this._translateClientPosToTexturePos(evt);
-    var newMarker =
-    {
-        id: Date.now(),
-        name: "Marker bez nazwy",
-        tooltip: "Marker bez nazwy",
-        content: '',
-        x: data.texture_x,
-        y: data.texture_y,
-        image: 'content/images/pin2.png',
-        width: 32,
-        height: 32,
-        anchor: 'bottom center'
-    };
-    var newMarker = this.addMarker(newMarker, true);
-    this.trigger('newMarker', newMarker);
-
-};
-
-PhotoSphereViewer.prototype._translateClientPosToTexturePos = function (evt) {
-    var boundingRect = this.container.getBoundingClientRect();
-
-    var data = {
-        client_x: parseInt(evt.clientX - boundingRect.left),
-        client_y: parseInt(evt.clientY - boundingRect.top)
-    };
-
-    var screen = new THREE.Vector2(
-      2 * data.client_x / this.prop.size.width - 1,
-      -2 * data.client_y / this.prop.size.height + 1
-    );
-    if (this.raycaster)
-        this.raycaster.setFromCamera(screen, this.camera);
-
-    var intersects = this.raycaster.intersectObjects(this.scene.children);
-
-    if (intersects.length === 1) {
-        var p = intersects[0].point;
-        var phi = Math.acos(p.y / Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z));
-        var theta = Math.atan2(p.x, p.z);
-
-        data.longitude = theta < 0 ? -theta : PhotoSphereViewer.TwoPI - theta;
-        data.latitude = PhotoSphereViewer.HalfPI - phi;
-
-        var relativeLong = data.longitude / PhotoSphereViewer.TwoPI * this.prop.size.image_width;
-        var relativeLat = data.latitude / PhotoSphereViewer.PI * this.prop.size.image_height;
-
-        data.texture_x = parseInt(data.longitude < PhotoSphereViewer.PI ? relativeLong + this.prop.size.image_width / 2 : relativeLong - this.prop.size.image_width / 2);
-        data.texture_y = parseInt(this.prop.size.image_height / 2 - relativeLat);
-
-        this.trigger('click', data);
-        return data;
-    }
-}
-
 
 /**
  * Initializes the zoom
  * @param evt (Event) The event
  */
 PhotoSphereViewer.prototype._startZoom = function(evt) {
-  this.stopAutorotate();
-  this.stopAnimation();
-
   var t = [
     { x: parseInt(evt.touches[0].clientX), y: parseInt(evt.touches[0].clientY) },
     { x: parseInt(evt.touches[1].clientX), y: parseInt(evt.touches[1].clientY) }
@@ -209,34 +158,7 @@ PhotoSphereViewer.prototype._stopMove = function(evt) {
     // inertia animation
     else if (this.config.move_inertia) {
       this._logMouseMove(evt);
-
-      var direction = {
-        x: evt.clientX - this.prop.mouse_history[0][1],
-        y: evt.clientY - this.prop.mouse_history[0][2]
-      };
-
-      var norm = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
-
-      var self = this;
-
-      this.prop.animation_promise = PSVUtils.animation({
-        properties: {
-          clientX: { start: evt.clientX, end: evt.clientX + direction.x },
-          clientY: { start: evt.clientY, end: evt.clientY + direction.y }
-        },
-        duration: norm * PhotoSphereViewer.INERTIA_WINDOW / 100,
-        easing: 'outCirc',
-        onTick: function(properties) {
-          self._move(properties);
-        },
-        onCancel: function() {
-          self.prop.moving = false;
-        }
-      });
-
-      this.prop.animation_promise.then(function() {
-        self.prop.moving = false;
-      });
+      this._stopMoveInertia(evt);
     }
     else {
       this.prop.moving = false;
@@ -245,6 +167,40 @@ PhotoSphereViewer.prototype._stopMove = function(evt) {
 
   this.prop.mouse_history.length = 0;
   this.prop.zooming = false;
+};
+
+/**
+ * Performs an animation to simulate inertia when stop moving
+ * @param evt
+ */
+PhotoSphereViewer.prototype._stopMoveInertia = function(evt) {
+  var self = this;
+
+  var direction = {
+    x: evt.clientX - this.prop.mouse_history[0][1],
+    y: evt.clientY - this.prop.mouse_history[0][2]
+  };
+
+  var norm = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+
+  this.prop.animation_promise = PSVUtils.animation({
+    properties: {
+      clientX: { start: evt.clientX, end: evt.clientX + direction.x },
+      clientY: { start: evt.clientY, end: evt.clientY + direction.y }
+    },
+    duration: norm * PhotoSphereViewer.INERTIA_WINDOW / 100,
+    easing: 'outCirc',
+    onTick: function(properties) {
+      self._move(properties);
+    },
+    onCancel: function() {
+      self.prop.moving = false;
+    }
+  });
+
+  this.prop.animation_promise.then(function() {
+    self.prop.moving = false;
+  });
 };
 
 /**
@@ -276,12 +232,10 @@ PhotoSphereViewer.prototype._click = function(evt) {
   var intersects = this.raycaster.intersectObjects(this.scene.children);
 
   if (intersects.length === 1) {
-    var p = intersects[0].point;
-    var phi = Math.acos(p.y / Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z));
-    var theta = Math.atan2(p.x, p.z);
+    var sphericalCoords = this.vector3ToSphericalCoords(intersects[0].point);
 
-    data.longitude = theta < 0 ? -theta : PhotoSphereViewer.TwoPI - theta;
-    data.latitude = PhotoSphereViewer.HalfPI - phi;
+    data.longitude = sphericalCoords.longitude;
+    data.latitude = sphericalCoords.latitude;
 
     var textureCoords = this.sphericalCoordsToTextureCoords(data.longitude, data.latitude);
 

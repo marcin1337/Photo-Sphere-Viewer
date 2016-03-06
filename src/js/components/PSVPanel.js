@@ -79,7 +79,7 @@ PSVPanel.prototype.handleEvent = function(e) {
     case 'mousedown': this._onMouseDown(e); break;
     case 'touchstart': this._onTouchStart(e); break;
     case 'mousemove': this._onMouseMove(e); break;
-    case 'touchmove': this._onMouseMove(e); break;
+    case 'touchmove': this._onTouchMove(e); break;
     case 'mouseup': this._onMouseUp(e); break;
     case 'touchend': this._onMouseUp(e); break;
     // @formatter:on
@@ -186,7 +186,7 @@ PSVPanel.prototype._onMouseMove = function(evt) {
 PSVPanel.prototype._onTouchMove = function(evt) {
   if (this.prop.mousedown) {
     evt.stopPropagation();
-    this._resize(evt.changedTouches[0]);
+    this._resize(evt.touches[0]);
   }
 };
 

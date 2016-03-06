@@ -7,19 +7,25 @@ PhotoSphereViewer.prototype.load = function() {
 
 /**
  * Performs a render
+ * @param updateDirection (boolean) false to NOT update view direction
  */
-PhotoSphereViewer.prototype.render = function() {  
-  this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
+PhotoSphereViewer.prototype.render = function(updateDirection) {
+  if (updateDirection !== false) {
+    this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
+    this.camera.lookAt(this.prop.direction);
+    this.camera.rotation.z = 0;
+  }
+
   this.camera.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
-  this.camera.lookAt(this.prop.direction);
   this.camera.updateProjectionMatrix();
-  
+
   if (this.composer) {
     this.composer.render();
   }
   else {
     this.renderer.render(this.scene, this.camera);
   }
+
   this.trigger('render');
 };
 
@@ -50,6 +56,7 @@ PhotoSphereViewer.prototype.destroy = function() {
   if (this.navbar) this.navbar.destroy();
   if (this.panel) this.panel.destroy();
   if (this.tooltip) this.tooltip.destroy();
+  if (this.doControls) this.doControls.disconnect();
 
   // destroy ThreeJS view
   if (this.scene) {
@@ -90,15 +97,6 @@ PhotoSphereViewer.prototype.destroy = function() {
   this.actions = {};
 };
 
-PhotoSphereViewer.prototype.ToggleEditMode = function () {
-    if (this.prop.editMode) {
-        this.hud.container.style.cursor = 'move';
-    } else {
-        this.hud.container.style.cursor = 'crosshair';
-    }
-    this.prop.editMode = !this.prop.editMode;
-}
-
 /**
  * Load a panorama file
  * If the "position" is not defined the camera will not move and the ongoing animation will continue
@@ -108,7 +106,7 @@ PhotoSphereViewer.prototype.ToggleEditMode = function () {
  * @param transition (boolean, optional)
  * @return (D.promise)
  */
-PhotoSphereViewer.prototype.setPanorama = function(path, position, transition,zoom) {
+PhotoSphereViewer.prototype.setPanorama = function(path, position, transition) {
   if (typeof position == 'boolean') {
     transition = position;
     position = undefined;
@@ -117,23 +115,8 @@ PhotoSphereViewer.prototype.setPanorama = function(path, position, transition,zo
   if (position) {
     this._cleanPosition(position);
 
-    this.stopAutorotate();
-    this.stopAnimation();
+    this.stopAll();
   }
-  
-  if(zoom){
-	    // the user has given us a default zoom-in value
-        // but we can only change it once we have a rendered scene 
-        // so make a one off event for it
-        var defaultZoomin = function () {
-            this.off('render', defaultZoomin);
-            this.prop.zoom_lvl = zoom;
-            this.zoom(zoom);
-        }
-        if (zoom != undefined)
-            this.on('render', defaultZoomin);
-  }
-  
 
   this.config.panorama = path;
 
@@ -178,11 +161,19 @@ PhotoSphereViewer.prototype.setPanorama = function(path, position, transition,zo
 };
 
 /**
+ * Stops all current animations
+ */
+PhotoSphereViewer.prototype.stopAll = function() {
+  this.stopAutorotate();
+  this.stopAnimation();
+  this.stopGyroscopeControl();
+};
+
+/**
  * Starts the autorotate animation
  */
 PhotoSphereViewer.prototype.startAutorotate = function() {
-  this.stopAutorotate();
-  this.stopAnimation();
+  this.stopAll();
 
   var self = this;
   var last = null;
@@ -235,54 +226,53 @@ PhotoSphereViewer.prototype.toggleAutorotate = function() {
 };
 
 /**
- * Resizes the canvas
- * @param width (integer) The new canvas width
- * @param height (integer) The new canvas height
+ * Starts the gyroscope interaction
  */
-PhotoSphereViewer.prototype.resize = function(width, height) {
-  this.prop.size.width = parseInt(width);
-  this.prop.size.height = parseInt(height);
-  this.prop.size.ratio = this.prop.size.width / this.prop.size.height;
-  this.prop.boundingRect = this.container.getBoundingClientRect();
+PhotoSphereViewer.prototype.startGyroscopeControl = function() {
+  this.stopAll();
 
-  if (this.camera) {
-    this.camera.aspect = this.prop.size.ratio;
-    this.camera.updateProjectionMatrix();
-  }
+  var self = this;
 
-  if (this.renderer) {
-    this.renderer.setSize(this.prop.size.width, this.prop.size.height);
-    if (this.composer) {
-      this.composer.reset(new THREE.WebGLRenderTarget(this.prop.size.width, this.prop.size.height));
-    }
+  (function run() {
+    self.doControls.update();
+    self.prop.direction = self.camera.getWorldDirection();
+
+    var sphericalCoords = self.vector3ToSphericalCoords(self.prop.direction);
+    self.prop.longitude = sphericalCoords.longitude;
+    self.prop.latitude = sphericalCoords.latitude;
+
+    self.render(false);
+
+    self.prop.orientation_reqid = window.requestAnimationFrame(run);
+  }());
+
+  this.trigger('gyroscope-updated', true);
+};
+
+/**
+ * Stops the gyroscope interaction
+ */
+PhotoSphereViewer.prototype.stopGyroscopeControl = function() {
+  if (this.prop.orientation_reqid) {
+    window.cancelAnimationFrame(this.prop.orientation_reqid);
+    this.prop.orientation_reqid = null;
+
+    this.trigger('gyroscope-updated', false);
+
     this.render();
   }
-
-  this.trigger('size-updated', {
-    width: this.prop.size.width,
-    height: this.prop.size.height
-  });
 };
 
-
-PhotoSphereViewer.prototype._rotateLeft = function () {
-    // Rotates the sphere && Returns to the equator (latitude = 0)
-    this.animate({longitude: this.prop.longitude - 0.7, latitude: this.prop.latitude}, 300);
-};
-
-PhotoSphereViewer.prototype._rotateRight = function () {
-    // Rotates the sphere && Returns to the equator (latitude = 0)
-	this.animate({longitude: this.prop.longitude + 0.7, latitude: this.prop.latitude}, 300);
-};
-
-PhotoSphereViewer.prototype._rotateDown = function () {
-    // Rotates the sphere && Returns to the equator (latitude = 0)
-	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude - 0.7}, 300);
-};
-
-PhotoSphereViewer.prototype._rotateUp = function () {
-    // Rotates the sphere && Returns to the equator (latitude = 0)
-	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude + 0.7}, 300);
+/**
+ * Toggles the gyroscope interaction
+ */
+PhotoSphereViewer.prototype.toggleGyroscopeControl = function() {
+  if (this.prop.orientation_reqid) {
+    this.stopGyroscopeControl();
+  }
+  else {
+    this.startGyroscopeControl();
+  }
 };
 
 /**
@@ -311,8 +301,7 @@ PhotoSphereViewer.prototype.rotate = function(position) {
  * @param duration (String|integer) Animation speed (per spec) or duration (milliseconds)
  */
 PhotoSphereViewer.prototype.animate = function(position, duration) {
-  this.stopAutorotate();
-  this.stopAnimation();
+  this.stopAll();
 
   if (!duration) {
     this.rotate(position);
@@ -371,7 +360,7 @@ PhotoSphereViewer.prototype.stopAnimation = function() {
  * @param level (integer) New zoom level
  */
 PhotoSphereViewer.prototype.zoom = function(level) {
-  this.prop.zoom_lvl = PSVUtils.stayBetween(parseInt(Math.round(level)), 0, 100);
+  this.prop.zoom_lvl = PSVUtils.stayBetween(Math.round(level), 0, 100);
   this.render();
   this.trigger('zoom-updated', this.prop.zoom_lvl);
 };

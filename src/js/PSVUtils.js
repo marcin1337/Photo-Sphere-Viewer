@@ -172,7 +172,7 @@ PSVUtils.getXMPValue = function(data, attr) {
  * @return (boolean) true if fullscreen is enabled, false otherwise
  */
 PSVUtils.isFullscreenEnabled = function() {
-  return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
 };
 
 /**
@@ -395,13 +395,52 @@ PSVUtils.animation.easings = {
 // @formatter:off
 
 /**
+ * Returns a function, that, when invoked, will only be triggered at most once during a given window of time.
+ * @copyright underscore.js - modified by Clément Prévost http://stackoverflow.com/a/27078401
+ * @param func (Function)
+ * @param wait (int)
+ * @returns (Function)
+ */
+PSVUtils.throttle = function(func, wait) {
+  var self, args, result;
+  var timeout = null;
+  var previous = 0;
+  var later = function() {
+    previous = Date.now();
+    timeout = null;
+    result = func.apply(self, args);
+    if (!timeout) self = args = null;
+  };
+  return function() {
+    var now = Date.now();
+    if (!previous) previous = now;
+    var remaining = wait - (now - previous);
+    self = this;
+    args = arguments;
+    if (remaining <= 0 || remaining > wait) {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      previous = now;
+      result = func.apply(self, args);
+      if (!timeout) self = args = null;
+    }
+    else if (!timeout) {
+      timeout = setTimeout(later, remaining);
+    }
+    return result;
+  };
+};
+
+/**
  * Merge the enumerable attributes of two objects.
  * Modified to replace arrays instead of merge.
  * @copyright Nicholas Fisher <nfisher110@gmail.com>"
  * @license MIT
- * @param object
- * @param object
- * @return object
+ * @param target (Object)
+ * @param src (Object)
+ * @return (Object)
  */
 PSVUtils.deepmerge = function(target, src) {
   var array = Array.isArray(src);
@@ -446,8 +485,8 @@ PSVUtils.deepmerge = function(target, src) {
 
 /**
  * Clone an object
- * @param object
- * @return object
+ * @param src (Object)
+ * @return (Object)
  */
 PSVUtils.clone = function(src) {
   return PSVUtils.deepmerge(Array.isArray(src) ? [] : {}, src);

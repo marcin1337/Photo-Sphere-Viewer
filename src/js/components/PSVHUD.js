@@ -244,6 +244,7 @@ PSVHUD.prototype._updateNormalMarker = function(marker) {
 
   // parse anchor
   marker.anchor = PSVUtils.parsePosition(marker.anchor);
+  style.transformOrigin = marker.anchor.left * 100 + '% ' + marker.anchor.top * 100 + '%';
 
   marker.x = Math.round(marker.x * this.psv.prop.size.image_ratio);
   marker.y = Math.round(marker.y * this.psv.prop.size.image_ratio);
@@ -369,7 +370,7 @@ PSVHUD.prototype.toggleMarker = function(marker) {
  * @return (void)
  */
 PSVHUD.prototype.updatePositions = function() {
-  this.psv.camera.updateProjectionMatrix();
+  var rotation = this.psv.camera.rotation.z / PhotoSphereViewer.PI * 180;
 
   for (var id in this.markers) {
     var marker = this.markers[id];
@@ -404,10 +405,7 @@ PSVHUD.prototype.updatePositions = function() {
       if (this._isMarkerVisible(marker, position)) {
         marker.position2D = position;
 
-        marker.$el.style.transform = 'translate3D(' +
-          position.left + 'px, ' +
-          position.top + 'px, ' +
-          '0px)';
+        marker.$el.style.transform = 'translate3D(' + position.left + 'px, ' + position.top + 'px, ' + '0px) rotateZ(' + rotation + 'deg)';
 
         if (!marker.$el.classList.contains('visible')) {
           marker.$el.classList.add('visible');
