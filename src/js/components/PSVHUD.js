@@ -245,9 +245,6 @@ PSVHUD.prototype._updateNormalMarker = function(marker) {
   // parse anchor
   marker.anchor = PSVUtils.parsePosition(marker.anchor);
   style.transformOrigin = marker.anchor.left * 100 + '% ' + marker.anchor.top * 100 + '%';
-
-  marker.x = Math.round(marker.x * this.psv.prop.size.image_ratio);
-  marker.y = Math.round(marker.y * this.psv.prop.size.image_ratio);
   
   // convert texture coordinates to spherical coordinates
   this.psv._cleanPosition(marker);

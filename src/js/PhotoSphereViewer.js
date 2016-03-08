@@ -101,8 +101,7 @@ function PhotoSphereViewer(options) {
     boundingRect: null, // DOMRect of the container
     size: { // size of the container
       width: 0,
-      height: 0,
-	  image_ratio: 1
+      height: 0
     },
     image_size: { // size of the image
       width: 0,

@@ -121,8 +121,7 @@ function PhotoSphereViewer(options) {
     boundingRect: null, // DOMRect of the container
     size: { // size of the container
       width: 0,
-      height: 0,
-	  image_ratio: 1
+      height: 0
     },
     image_size: { // size of the image
       width: 0,
@@ -982,8 +981,8 @@ PhotoSphereViewer.prototype._loadTexture = function(pano_data) {
     if (PhotoSphereViewer.SYSTEM.isWebGLSupported) {
       max_width = PhotoSphereViewer.SYSTEM.maxTextureWidth;
     }
-	self.prop.size.image_ratio = Math.min(pano_data.full_width, max_width) / pano_data.full_width;
-    var r = self.prop.size.image_ratio;
+
+    var r = Math.min(pano_data.full_width, max_width) / pano_data.full_width;
 
     pano_data.full_width *= r;
     pano_data.full_height *= r;
@@ -3378,9 +3377,6 @@ PSVHUD.prototype._updateNormalMarker = function(marker) {
   // parse anchor
   marker.anchor = PSVUtils.parsePosition(marker.anchor);
   style.transformOrigin = marker.anchor.left * 100 + '% ' + marker.anchor.top * 100 + '%';
-
-  marker.x = Math.round(marker.x * this.psv.prop.size.image_ratio);
-  marker.y = Math.round(marker.y * this.psv.prop.size.image_ratio);
   
   // convert texture coordinates to spherical coordinates
   this.psv._cleanPosition(marker);

@@ -114,8 +114,8 @@ PhotoSphereViewer.prototype._loadTexture = function(pano_data) {
     if (PhotoSphereViewer.SYSTEM.isWebGLSupported) {
       max_width = PhotoSphereViewer.SYSTEM.maxTextureWidth;
     }
-	self.prop.size.image_ratio = Math.min(pano_data.full_width, max_width) / pano_data.full_width;
-    var r = self.prop.size.image_ratio;
+
+    var r = Math.min(pano_data.full_width, max_width) / pano_data.full_width;
 
     pano_data.full_width *= r;
     pano_data.full_height *= r;
