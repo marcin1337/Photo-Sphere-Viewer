@@ -8,6 +8,7 @@ module.exports = function(grunt) {
 
   // some classes have to be executed before other
   var files_in_order = grunt.file.expand([
+    'src/js/PSVUtils.js',
     'src/js/PhotoSphereViewer.js',
     'src/js/components/PSVComponent.js',
     'src/js/buttons/PSVNavBarButton.js',
@@ -165,6 +166,9 @@ module.exports = function(grunt) {
      * Mocha unit tests
      */
     mochaTest: {
+      options: {
+        log: true
+      },
       lib: {
         src: ['tests/utils/*.js']
       }

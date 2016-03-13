@@ -6,8 +6,62 @@ PhotoSphereViewer.prototype.load = function() {
 };
 
 /**
+ * Returns teh current position on the camera
+ * @returns ({longitude: double, latitude: double})
+ */
+PhotoSphereViewer.prototype.getPosition = function() {
+  return {
+    longitude: this.prop.longitude,
+    latitude: this.prop.latitude
+  };
+};
+
+/**
+ * Returns the current zoom level
+ * @returns (double)
+ */
+PhotoSphereViewer.prototype.getZoomLevel = function() {
+  return this.prop.zoom_lvl;
+};
+
+/**
+ * Returns the current viewer size
+ * @returns ({width: int, height: int})
+ */
+PhotoSphereViewer.prototype.getSize = function() {
+  return {
+    width: this.prop.size.width,
+    height: this.prop.size.height
+  };
+};
+
+/**
+ * Check if the automatic rotation is enabled
+ * @returns (boolean)
+ */
+PhotoSphereViewer.prototype.isAutorotateEnabled = function() {
+  return !!this.prop.autorotate_reqid;
+};
+
+/**
+ * Check if the gyroscope is enabled
+ * @returns (boolean)
+ */
+PhotoSphereViewer.prototype.isGyroscopeEnabled = function() {
+  return !!this.prop.orientation_reqid;
+};
+
+/**
+ * Check if the viewer is in fullscreen
+ * @returns (boolean)
+ */
+PhotoSphereViewer.prototype.isFullscreenEnabled = function() {
+  return PSVUtils.isFullscreenEnabled(this.container);
+};
+
+/**
  * Performs a render
- * @param updateDirection (boolean) false to NOT update view direction
+ * @param updateDirection (boolean) should update camera direction - default: true
  */
 PhotoSphereViewer.prototype.render = function(updateDirection) {
   if (updateDirection !== false) {
@@ -185,7 +239,7 @@ PhotoSphereViewer.prototype.startAutorotate = function() {
       last = timestamp;
 
       self.rotate({
-        longitude: self.prop.longitude + self.prop.anim_speed * elapsed / 1000,
+        longitude: self.prop.longitude + self.config.anim_speed * elapsed / 1000,
         latitude: self.prop.latitude - (self.prop.latitude - self.config.anim_lat) / 200
       });
     }
@@ -217,7 +271,7 @@ PhotoSphereViewer.prototype.stopAutorotate = function() {
  * Launches/stops the autorotate animation
  */
 PhotoSphereViewer.prototype.toggleAutorotate = function() {
-  if (this.prop.autorotate_reqid) {
+  if (this.isAutorotateEnabled()) {
     this.stopAutorotate();
   }
   else {
@@ -267,7 +321,7 @@ PhotoSphereViewer.prototype.stopGyroscopeControl = function() {
  * Toggles the gyroscope interaction
  */
 PhotoSphereViewer.prototype.toggleGyroscopeControl = function() {
-  if (this.prop.orientation_reqid) {
+  if (this.isGyroscopeEnabled()) {
     this.stopGyroscopeControl();
   }
   else {
@@ -280,7 +334,7 @@ PhotoSphereViewer.prototype.toggleGyroscopeControl = function() {
  * @param position (Object) latitude & longitude or x & y
  */
 PhotoSphereViewer.prototype.rotate = function(position) {
-  this._cleanPosition(position);
+  this._cleanPosition(position, true);
 
   this.prop.longitude = position.longitude;
   this.prop.latitude = position.latitude;
@@ -289,10 +343,7 @@ PhotoSphereViewer.prototype.rotate = function(position) {
     this.render();
   }
 
-  this.trigger('position-updated', {
-    longitude: this.prop.longitude,
-    latitude: this.prop.latitude
-  });
+  this.trigger('position-updated', this.getPosition());
 };
 
 /**
@@ -308,11 +359,11 @@ PhotoSphereViewer.prototype.animate = function(position, duration) {
     return;
   }
 
-  this._cleanPosition(position);
+  this._cleanPosition(position, true);
 
   if (!duration && typeof duration != 'number') {
     // desired radial speed
-    duration = duration ? this._parseAnimSpeed(duration) : this.prop.anim_speed;
+    duration = duration ? PSVUtils.parseSpeed(duration) : this.config.anim_speed;
     // get the angle between current position and target
     var angle = Math.acos(
       Math.cos(this.prop.latitude) * Math.cos(position.latitude) * Math.cos(this.prop.longitude - position.longitude) +
@@ -325,8 +376,8 @@ PhotoSphereViewer.prototype.animate = function(position, duration) {
   // longitude offset for shortest arc
   var tCandidates = [
     0, // direct
-    PhotoSphereViewer.TwoPI, // clock-wise cross zero
-    -PhotoSphereViewer.TwoPI // counter-clock-wise cross zero
+    PSVUtils.TwoPI, // clock-wise cross zero
+    -PSVUtils.TwoPI // counter-clock-wise cross zero
   ];
 
   var tOffset = tCandidates.reduce(function(value, candidate) {
@@ -362,7 +413,7 @@ PhotoSphereViewer.prototype.stopAnimation = function() {
 PhotoSphereViewer.prototype.zoom = function(level) {
   this.prop.zoom_lvl = PSVUtils.stayBetween(Math.round(level), 0, 100);
   this.render();
-  this.trigger('zoom-updated', this.prop.zoom_lvl);
+  this.trigger('zoom-updated', this.getZoomLevel());
 };
 
 /**
@@ -387,20 +438,12 @@ PhotoSphereViewer.prototype.zoomOut = function() {
  * Enables/disables fullscreen
  */
 PhotoSphereViewer.prototype.toggleFullscreen = function() {
-  if (!PSVUtils.isFullscreenEnabled()) {
+  if (!this.isFullscreenEnabled()) {
     PSVUtils.requestFullscreen(this.container);
   }
   else {
     PSVUtils.exitFullscreen();
   }
-};
-
-/**
- * Sets the animation speed
- * @param speed (string) The speed, in radians/degrees/revolutions per second/minute
- */
-PhotoSphereViewer.prototype.setAnimSpeed = function(speed) {
-  this.prop.anim_speed = this._parseAnimSpeed(speed);
 };
 
 /**

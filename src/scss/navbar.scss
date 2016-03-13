@@ -2,10 +2,16 @@
   @include flexbox();
   position: absolute;
   z-index: $navbar-zindex;
-  bottom: 0;
+  bottom: -$navbar-height;
   left: 0;
   width: 100%;
+  height: $navbar-height;
   background: $navbar-background;
+  transition: bottom ease-in-out .1s;
+
+  &.open {
+    bottom: 0;
+  }
 
   // scss-lint:disable UnnecessaryParentReference
   &, & * {

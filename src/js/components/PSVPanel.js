@@ -88,7 +88,7 @@ PSVPanel.prototype.handleEvent = function(e) {
 
 /**
  * Show the panel
- * @param marker (Object)
+ * @param content (String)
  * @param noMargin (Boolean)
  * @return (void)
  */
