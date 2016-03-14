@@ -63,10 +63,7 @@ PhotoSphereViewer.prototype._onResize = function() {
       this.render();
     }
 
-    this.trigger('size-updated', {
-      width: this.prop.size.width,
-      height: this.prop.size.height
-    });
+    this.trigger('size-updated', this.getSize());
   }
 };
 
@@ -339,7 +336,7 @@ PhotoSphereViewer.prototype._onMouseWheel = function(evt) {
  * Fullscreen state has changed
  */
 PhotoSphereViewer.prototype._fullscreenToggled = function() {
-  this.trigger('fullscreen-updated', PSVUtils.isFullscreenEnabled());
+  this.trigger('fullscreen-updated', this.isFullscreenEnabled());
 };
 
 /**

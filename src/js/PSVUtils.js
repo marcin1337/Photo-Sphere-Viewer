@@ -3,6 +3,9 @@
  */
 var PSVUtils = {};
 
+PSVUtils.TwoPI = Math.PI * 2.0;
+PSVUtils.HalfPI = Math.PI / 2.0;
+
 /**
  * Check if some Three.js components are loaded
  * @param components (String...)
@@ -70,6 +73,24 @@ PSVUtils.isWebGLSupported = function() {
 PSVUtils.getMaxTextureWidth = function() {
   var ctx = PSVUtils.getWebGLCtx();
   return ctx.getParameter(ctx.MAX_TEXTURE_SIZE);
+};
+
+/**
+ * Toggle a CSS class
+ * @param element
+ * @param className
+ * @param active
+ */
+PSVUtils.toggleClass = function(element, className, active) {
+  if (active === undefined) {
+    element.classList.toggle(className);
+  }
+  else if (active && !element.classList.contains(className)) {
+    element.classList.add(className);
+  }
+  else if (!active) {
+    element.classList.remove(className);
+  }
 };
 
 /**
@@ -169,10 +190,11 @@ PSVUtils.getXMPValue = function(data, attr) {
 
 /**
  * Detects whether fullscreen is enabled or not
+ * @param elt (HTMLElement)
  * @return (boolean) true if fullscreen is enabled, false otherwise
  */
-PSVUtils.isFullscreenEnabled = function() {
-  return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+PSVUtils.isFullscreenEnabled = function(elt) {
+  return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement) === elt;
 };
 
 /**
@@ -252,6 +274,107 @@ PSVUtils.parsePosition = function(value) {
 };
 
 PSVUtils.parsePosition.positions = { 'top': '0%', 'bottom': '100%', 'left': '0%', 'right': '100%', 'center': '50%' };
+
+/**
+ * Parse the animation speed
+ * @param speed (string) The speed, in radians/degrees/revolutions per second/minute
+ * @return (double) radians per second
+ */
+PSVUtils.parseSpeed = function(speed) {
+  if (typeof speed == 'string') {
+    speed = speed.toString().trim();
+
+    // Speed extraction
+    var speed_value = parseFloat(speed.replace(/^(-?[0-9]+(?:\.[0-9]*)?).*$/, '$1'));
+    var speed_unit = speed.replace(/^-?[0-9]+(?:\.[0-9]*)?(.*)$/, '$1').trim();
+
+    // "per minute" -> "per second"
+    if (speed_unit.match(/(pm|per minute)$/)) {
+      speed_value /= 60;
+    }
+
+    // Which unit?
+    switch (speed_unit) {
+      // Degrees per minute / second
+      case 'dpm':
+      case 'degrees per minute':
+      case 'dps':
+      case 'degrees per second':
+        speed = speed_value * Math.PI / 180;
+        break;
+
+      // Radians per minute / second
+      case 'radians per minute':
+      case 'radians per second':
+        speed = speed_value;
+        break;
+
+      // Revolutions per minute / second
+      case 'rpm':
+      case 'revolutions per minute':
+      case 'rps':
+      case 'revolutions per second':
+        speed = speed_value * PSVUtils.TwoPI;
+        break;
+
+      // Unknown unit
+      default:
+        throw new PSVError('unknown speed unit "' + speed_unit + '"');
+    }
+  }
+
+  return speed;
+};
+
+/**
+ * Parses an angle value in radians or degrees and return a normalized value in radians
+ * @param angle (String|int|double) - 3.14, 3.14rad, 180deg
+ * @param reference (boolean) base value for normalization, false to disable - default: 0
+ * @returns (double)
+ */
+PSVUtils.parseAngle = function(angle, reference) {
+  if (typeof angle == 'string') {
+    var match = angle.toLowerCase().trim().match(/^(-?[0-9]+(?:\.[0-9]*)?)(.*)$/);
+
+    if (!match) {
+      throw new PSVError('unknown angle "' + angle + '"');
+    }
+
+    var value = parseFloat(match[1]);
+    var unit = match[2];
+
+    if (unit) {
+      switch (unit) {
+        case 'deg':
+        case 'degs':
+          angle = value / 180 * Math.PI;
+          break;
+        case 'rad':
+        case 'rads':
+          angle = value;
+          break;
+        default:
+          throw new PSVError('unknown angle unit "' + unit + '"');
+      }
+    }
+  }
+
+  if (reference !== false) {
+    if (reference === undefined) {
+      reference = 0;
+    }
+
+    angle = (angle - reference) % PSVUtils.TwoPI;
+
+    if (angle < 0) {
+      angle = PSVUtils.TwoPI + angle;
+    }
+
+    angle+= reference;
+  }
+
+  return angle;
+};
 
 /**
  * Utility for animations

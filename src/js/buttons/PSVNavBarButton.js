@@ -26,7 +26,7 @@ PSVNavBarButton.prototype.create = function() {
  * @return (void)
  */
 PSVNavBarButton.prototype.toggleActive = function(active) {
-  this.container.classList.toggle('active', active);
+  PSVUtils.toggleClass(this.container, 'active', active);
 
   if (this.constructor.iconActive) {
     this.container.innerHTML = PhotoSphereViewer.ICONS[active ? this.constructor.iconActive : this.constructor.icon];

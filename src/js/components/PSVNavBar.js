@@ -39,7 +39,8 @@ function PSVNavBar(psv) {
 PSVNavBar.prototype = Object.create(PSVComponent.prototype);
 PSVNavBar.prototype.constructor = PSVNavBar;
 
-PSVNavBar.className = 'psv-navbar';
+PSVNavBar.className = 'psv-navbar open';
+PSVNavBar.publicMethods = ['showNavbar', 'hideNavbar', 'toggleNavbar'];
 
 /**
  * Creates the navbar
@@ -114,4 +115,26 @@ PSVNavBar.prototype.destroy = function() {
   this.items.length = 0;
 
   PSVComponent.prototype.destroy.call(this);
+};
+
+/**
+ * Show the navbar
+ */
+PSVNavBar.prototype.showNavbar = function() {
+  this.toggleNavbar(true);
+};
+
+/**
+ * Hides the navbar
+ */
+PSVNavBar.prototype.hideNavbar = function() {
+  this.toggleNavbar(false);
+};
+
+/**
+ * Toggles the navbar
+ * @param active
+ */
+PSVNavBar.prototype.toggleNavbar = function(active) {
+  PSVUtils.toggleClass(this.container, 'open', active);
 };

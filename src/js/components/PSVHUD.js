@@ -287,6 +287,14 @@ PSVHUD.prototype._updatePolygonMarker = function(marker) {
       return [sphericalCoords.longitude, sphericalCoords.latitude];
     }, this);
   }
+  else {
+    marker.polygon_rad = marker.polygon_rad.map(function(coord) {
+      return [
+        PSVUtils.parseAngle(coord[0]),
+        PSVUtils.stayBetween(PSVUtils.parseAngle(coord[1], -Math.PI), -PSVUtils.HalfPI, PSVUtils.HalfPI)
+      ];
+    });
+  }
 
   // TODO : compute the center of the polygon
   marker.longitude = marker.polygon_rad[0][0];
@@ -367,7 +375,7 @@ PSVHUD.prototype.toggleMarker = function(marker) {
  * @return (void)
  */
 PSVHUD.prototype.updatePositions = function() {
-  var rotation = this.psv.camera.rotation.z / PhotoSphereViewer.PI * 180;
+  var rotation = this.psv.camera.rotation.z / Math.PI * 180;
 
   for (var id in this.markers) {
     var marker = this.markers[id];
