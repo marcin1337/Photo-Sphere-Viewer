@@ -110,7 +110,6 @@ function PhotoSphereViewer(options) {
       width: 0,
       height: 0
     },
-    },
     pano_data: { // panorama metadata
       full_width: 0,
       full_height: 0,

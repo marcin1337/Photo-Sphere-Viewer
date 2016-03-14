@@ -39,12 +39,12 @@
         background: $markers-list-even-background;
       }
     }
-
+	/*
     &:hover {
       transform: translateX($markers-list-hover-translation);
       transition: transform .1s ease-in-out;
     }
-
+	*/
     .marker-image {
       float: left;
       width: $markers-list-image-size;

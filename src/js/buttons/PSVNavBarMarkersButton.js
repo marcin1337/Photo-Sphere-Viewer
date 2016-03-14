@@ -94,7 +94,7 @@ PSVNavBarMarkersButton.prototype.showMarkers = function() {
     if (marker.image) {
       html += '<img class="marker-image" src="' + marker.image + '"/>';
     }
-    html += '<p class="marker-name">' + name + '</p>' +
+    html += '<p class="marker-name">' + name +'<i>'+marker.name +'</i>' + '</p>' +
       '</li>';
   }
 
