@@ -418,7 +418,10 @@ PhotoSphereViewer.prototype._addMarker = function (evt) {
         content: '',
         x: data.texture_x,
         y: data.texture_y,
-        image: 'content/images/pin2.png',
+        html: '<i class="material-icons marker" style="color:black;font-size:64px;" aria-hidden="true">details</i>',
+		markerIcon : 'details',
+		markerColor:'black',
+		markerSize:'64',
         width: 32,
         height: 32,
         anchor: 'bottom center'
