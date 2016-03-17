@@ -4,6 +4,7 @@
 PhotoSphereViewer.loadSystem = function() {
   var S = PhotoSphereViewer.SYSTEM;
   S.loaded = true;
+  S.pixelRatio = window.devicePixelRatio || 1;
   S.isWebGLSupported = PSVUtils.isWebGLSupported();
   S.isCanvasSupported = PSVUtils.isCanvasSupported();
   S.maxTextureWidth = S.isWebGLSupported ? PSVUtils.getMaxTextureWidth() : 4096;

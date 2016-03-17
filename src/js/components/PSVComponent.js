@@ -38,3 +38,17 @@ PSVComponent.prototype.destroy = function() {
   this.psv = null;
   this.parent = null;
 };
+
+/**
+ * Hides the component
+ */
+PSVComponent.prototype.hide = function() {
+  this.container.style.visibility = 'hidden';
+};
+
+/**
+ * Restores component visibility
+ */
+PSVComponent.prototype.show = function() {
+  this.container.style.visibility = null;
+};

@@ -66,10 +66,9 @@ PSVNavBarZoomButton.prototype.create = function() {
 
   this.psv.on('zoom-updated', this);
 
-  var self = this;
-  window.setTimeout(function() {
-    self._moveZoomValue(self.psv.prop.zoom_lvl);
-  }, 0);
+  this.psv.once('render', function() {
+    this._moveZoomValue(this.psv.prop.zoom_lvl);
+  }.bind(this));
 };
 
 /**
@@ -99,7 +98,7 @@ PSVNavBarZoomButton.prototype.handleEvent = function(e) {
     case 'touchmove': this._changeZoomByTouch(e); break;
     case 'mouseup': this._stopZoomChange(e); break;
     case 'touchend': this._stopZoomChange(e); break;
-    case 'psv:zoom-updated': this._moveZoomValue(e.args[0]); break;
+    case 'zoom-updated': this._moveZoomValue(e.args[0]); break;
     // @formatter:on
   }
 };

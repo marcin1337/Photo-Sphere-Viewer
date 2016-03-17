@@ -1,5 +1,5 @@
 /*!
- * Photo Sphere Viewer 3.1.0
+ * Photo Sphere Viewer 3.2.0-SNAPSHOT
  * Copyright (c) 2014-2015 Jérémy Heleine
  * Copyright (c) 2015-2016 Damien "Mistic" Sorel
  * Licensed under MIT (http://opensource.org/licenses/MIT)
@@ -74,10 +74,19 @@
   display: flex;
   position: absolute;
   z-index: 90;
+<<<<<<< HEAD
   bottom: 0;
+=======
+  bottom: -40px;
+>>>>>>> 3b65a122ffadc551d56c21f96edae4199928f932
   left: 0;
   width: 100%;
+  height: 40px;
   background: rgba(61, 61, 61, 0.5);
+  transition: bottom ease-in-out .1s;
+}
+.psv-navbar.open {
+  bottom: 0;
 }
 .psv-navbar, .psv-navbar * {
   box-sizing: content-box;

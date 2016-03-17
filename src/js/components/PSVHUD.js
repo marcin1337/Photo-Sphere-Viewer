@@ -38,7 +38,7 @@ PSVHUD.prototype.create = function() {
   this.container.addEventListener('mousemove', this, true);
 
   // Viewer events
-  this.psv.on('_click', this);
+  this.psv.on('click', this);
   this.psv.on('render', this);
 };
 
@@ -50,7 +50,7 @@ PSVHUD.prototype.destroy = function() {
   this.container.removeEventListener('mouseleave', this);
   this.container.removeEventListener('mousemove', this);
 
-  this.psv.off('_click', this);
+  this.psv.off('click', this);
   this.psv.off('render', this);
 
   this.container.removeChild(this.$svg);
@@ -66,11 +66,11 @@ PSVHUD.prototype.destroy = function() {
 PSVHUD.prototype.handleEvent = function(e) {
   switch (e.type) {
     // @formatter:off
-    case 'mouseenter': this._onMouseEnter(e);    break;
-    case 'mouseleave': this._onMouseLeave(e);    break;
-    case 'mousemove':  this._onMouseMove(e);     break;
-    case 'psv:_click': this._onClick(e.args[0]); break;
-    case 'psv:render': this.updatePositions();   break;
+    case 'mouseenter': this._onMouseEnter(e); break;
+    case 'mouseleave': this._onMouseLeave(e); break;
+    case 'mousemove': this._onMouseMove(e); break;
+    case 'click': this._onClick(e.args[0], e); break;
+    case 'render': this.updatePositions(); break;
     // @formatter:on
   }
 };
@@ -375,7 +375,9 @@ PSVHUD.prototype.toggleMarker = function(marker) {
  * @return (void)
  */
 PSVHUD.prototype.updatePositions = function() {
-  var rotation = this.psv.camera.rotation.z / Math.PI * 180;
+  // FIXME: only when using gyroscope
+  //var rotation = this.psv.camera.rotation.z / Math.PI * 180;
+  var rotation = 0;
 
   for (var id in this.markers) {
     var marker = this.markers[id];
@@ -601,24 +603,22 @@ PSVHUD.prototype._onMouseMove = function(e) {
 
 /**
  * The mouse button is release : show/hide the panel if threshold was not reached, or do nothing
+ * @param data (Object)
  * @param e (Event)
  * @return (void)
  */
-PSVHUD.prototype._onClick = function(e) {
+PSVHUD.prototype._onClick = function(data, e) {
   var marker;
-  if (e.target && (marker = PSVUtils.getClosest(e.target, '.psv-marker')) && marker.psvMarker) {
+  if (data.target && (marker = PSVUtils.getClosest(data.target, '.psv-marker')) && marker.psvMarker) {
     this.currentMarker = marker.psvMarker;
     this.psv.trigger('select-marker', marker.psvMarker);
 
     if (this.psv.config.click_event_on_marker) {
       // add the marker to event data
-      e.data = {
-        marker: marker.psvMarker
-      };
+      data.marker = marker.psvMarker;
     }
     else {
-      // prevent the public "click" event
-      e.preventDefault();
+      e.stopPropagation();
     }
   }
   else if (this.currentMarker) {
@@ -643,7 +643,7 @@ PSVHUD.prototype._onClick = function(e) {
     }	     
   }
   else if (this.psv.panel.prop.opened) {
-    e.preventDefault(); // prevent the public "click" event
+    e.stopPropagation();
     this.psv.panel.hidePanel();
   }
 };

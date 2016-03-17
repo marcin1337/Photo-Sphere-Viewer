@@ -51,8 +51,8 @@ PSVNavBarMarkersButton.prototype.destroy = function() {
 PSVNavBarMarkersButton.prototype.handleEvent = function(e) {
   switch (e.type) {
     // @formatter:off
-    case 'psv:open-panel': this._onPanelOpened(); break;
-    case 'psv:close-panel': this._onPanelClosed(); break;
+    case 'open-panel': this._onPanelOpened(); break;
+    case 'close-panel': this._onPanelClosed(); break;
     // @formatter:on
   }
 };

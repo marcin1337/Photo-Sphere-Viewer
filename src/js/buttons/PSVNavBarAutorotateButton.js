@@ -45,7 +45,7 @@ PSVNavBarAutorotateButton.prototype.destroy = function() {
 PSVNavBarAutorotateButton.prototype.handleEvent = function(e) {
   switch (e.type) {
     // @formatter:off
-    case 'psv:autorotate': this.toggleActive(e.args[0]); break;
+    case 'autorotate': this.toggleActive(e.args[0]); break;
     // @formatter:on
   }
 };

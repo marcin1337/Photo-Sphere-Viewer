@@ -1,6 +1,6 @@
 {
   "name": "Photo-Sphere-Viewer",
-  "version": "3.1.0",
+  "version": "3.2.0-SNAPSHOT",
   "authors": [
     {
       "name": "Jérémy Heleine",
@@ -21,7 +21,8 @@
   ],
   "dependencies": {
     "three.js": ">= 0.0.67",
-    "D.js": "~0.7.3"
+    "D.js": "~0.7.3",
+    "uevent": "~1.0.0"
   },
   "keywords": [
     "photosphere",

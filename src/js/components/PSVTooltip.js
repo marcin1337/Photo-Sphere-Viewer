@@ -49,7 +49,7 @@ PSVTooltip.prototype.destroy = function() {
 PSVTooltip.prototype.handleEvent = function(e) {
   switch (e.type) {
     // @formatter:off
-    case 'psv:render': this.hideTooltip(); break;
+    case 'render': this.hideTooltip(); break;
     // @formatter:on
   }
 };

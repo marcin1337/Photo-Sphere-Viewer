@@ -50,7 +50,7 @@ PSVNavBarGyroscopeButton.prototype.destroy = function() {
 PSVNavBarGyroscopeButton.prototype.handleEvent = function(e) {
   switch (e.type) {
     // @formatter:off
-    case 'psv:gyroscope-updated': this.toggleActive(e.args[0]); break;
+    case 'gyroscope-updated': this.toggleActive(e.args[0]); break;
     // @formatter:on
   }
 };

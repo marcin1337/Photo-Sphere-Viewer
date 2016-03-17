@@ -225,24 +225,6 @@ PhotoSphereViewer.prototype._createScene = function() {
   this.container.appendChild(this.canvas_container);
   this.canvas_container.appendChild(this.renderer.domElement);
 
-  // Navigation bar
-  if (this.config.navbar) {
-    this.container.classList.add('has-navbar');
-    this.navbar = new PSVNavBar(this);
-  }
-
-  // HUD
-  this.hud = new PSVHUD(this);
-  this.config.markers.forEach(function(marker) {
-    this.hud.addMarker(marker, false);
-  }, this);
-
-  // Panel
-  this.panel = new PSVPanel(this);
-
-  // Tooltip
-  this.tooltip = new PSVTooltip(this.hud);
-
   // Queue animation
   if (this.config.time_anim !== false) {
     this.prop.start_timeout = window.setTimeout(this.startAutorotate.bind(this), this.config.time_anim);
@@ -323,7 +305,7 @@ PhotoSphereViewer.prototype._transition = function(texture, position) {
 
     if (self.config.transition.blur) {
       self.passes.blur.uniforms.fDensity.value = properties.density;
-      self.prop.zoom_lvl = properties.zoom;
+      self.zoom(properties.zoom, false);
     }
 
     self.render();
@@ -359,7 +341,7 @@ PhotoSphereViewer.prototype._transition = function(texture, position) {
         self.passes.copy.enabled = true;
         self.passes.blur.enabled = false;
 
-        self.prop.zoom_lvl = original_zoom_lvl;
+        self.zoom(original_zoom_lvl, false);
       }
 
       // remove temp sphere and transfer the texture to the main sphere

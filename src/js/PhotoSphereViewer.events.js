@@ -211,12 +211,8 @@ PhotoSphereViewer.prototype._stopMoveInertia = function(evt) {
  * @param evt (Event) The event
  */
 PhotoSphereViewer.prototype._click = function(evt) {
-  this.trigger('_click', evt);
-  if (evt.defaultPrevented) {
-    return;
-  }
-
   var data = {
+    target: evt.target,
     client_x: parseInt(evt.clientX - this.prop.boundingRect.left),
     client_y: parseInt(evt.clientY - this.prop.boundingRect.top)
   };
@@ -284,9 +280,11 @@ PhotoSphereViewer.prototype._move = function(evt) {
     var x = parseInt(evt.clientX);
     var y = parseInt(evt.clientY);
 
+    var multiplicator = 1 / PhotoSphereViewer.SYSTEM.pixelRatio * this.prop.fov / 100 * Math.PI * this.config.move_speed;
+
     this.rotate({
-      longitude: this.prop.longitude - (x - this.prop.mouse_x) * this.config.long_offset,
-      latitude: this.prop.latitude + (y - this.prop.mouse_y) * this.config.lat_offset
+      longitude: this.prop.longitude - (x - this.prop.mouse_x) / this.prop.size.width * multiplicator,
+      latitude: this.prop.latitude + (y - this.prop.mouse_y) / this.prop.size.height * multiplicator
     });
 
     this.prop.mouse_x = x;

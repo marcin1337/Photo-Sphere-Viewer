@@ -2,6 +2,10 @@
  * Starts to load the panorama
  */
 PhotoSphereViewer.prototype.load = function() {
+  if (!this.config.panorama) {
+    throw new PSVError('No value given for panorama.');
+  }
+
   this.setPanorama(this.config.panorama, false);
 };
 
@@ -67,10 +71,10 @@ PhotoSphereViewer.prototype.render = function(updateDirection) {
   if (updateDirection !== false) {
     this.prop.direction = this.sphericalCoordsToVector3(this.prop.longitude, this.prop.latitude);
     this.camera.lookAt(this.prop.direction);
-    this.camera.rotation.z = 0;
+    //this.camera.rotation.z = 0;
   }
 
-  this.camera.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
+  this.camera.fov = this.prop.fov;
   this.camera.updateProjectionMatrix();
 
   if (this.composer) {
@@ -332,18 +336,19 @@ PhotoSphereViewer.prototype.toggleGyroscopeControl = function() {
 /**
  * Rotate the camera
  * @param position (Object) latitude & longitude or x & y
+ * @param render (boolean) default true
  */
-PhotoSphereViewer.prototype.rotate = function(position) {
+PhotoSphereViewer.prototype.rotate = function(position, render) {
   this._cleanPosition(position, true);
 
   this.prop.longitude = position.longitude;
   this.prop.latitude = position.latitude;
 
-  if (this.renderer) {
+  if (render !== false && this.renderer) {
     this.render();
-  }
 
-  this.trigger('position-updated', this.getPosition());
+    this.trigger('position-updated', this.getPosition());
+  }
 };
 
 /**
@@ -409,11 +414,17 @@ PhotoSphereViewer.prototype.stopAnimation = function() {
 /**
  * Zoom
  * @param level (integer) New zoom level
+ * @param render (boolean) default true
  */
-PhotoSphereViewer.prototype.zoom = function(level) {
+PhotoSphereViewer.prototype.zoom = function(level, render) {
   this.prop.zoom_lvl = PSVUtils.stayBetween(Math.round(level), 0, 100);
-  this.render();
-  this.trigger('zoom-updated', this.getZoomLevel());
+  this.prop.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
+
+  if (render !== false && this.renderer) {
+    this.render();
+
+    this.trigger('zoom-updated', this.getZoomLevel());
+  }
 };
 
 /**

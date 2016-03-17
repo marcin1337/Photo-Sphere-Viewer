@@ -28,8 +28,9 @@
 
 <div id="photosphere"></div>
 
-<script src="../bower_components/three.js/three.js"></script>
+<script src="../bower_components/three.js/three.min.js"></script>
 <script src="../bower_components/D.js/lib/D.min.js"></script>
+<script src="../bower_components/uevent/uevent.min.js"></script>
 <script src="../bower_components/threejs-examples/examples/js/renderers/CanvasRenderer.js"></script>
 <script src="../bower_components/threejs-examples/examples/js/renderers/Projector.js"></script>
 <script src="../bower_components/threejs-examples/examples/js/postprocessing/EffectComposer.js"></script>
@@ -121,6 +122,7 @@
     tilt_down_max: -Math.PI/4,
     anim_speed: '-2rpm',
     default_fov: 70,
+    move_speed: 1.1,
     time_anim: false,
     transition: {
       duration: 1000,
