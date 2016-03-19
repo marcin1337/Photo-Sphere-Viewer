@@ -67,7 +67,7 @@ PSVUtils.isWebGLSupported = function() {
 };
 
 /**
- * Get max texture width in WebGL context
+ * Gets max texture width in WebGL context
  * @return (int)
  */
 PSVUtils.getMaxTextureWidth = function() {
@@ -76,10 +76,10 @@ PSVUtils.getMaxTextureWidth = function() {
 };
 
 /**
- * Toggle a CSS class
- * @param element
- * @param className
- * @param active
+ * Toggles a CSS class
+ * @param element (HTMLElement)
+ * @param className (String)
+ * @param active (boolean,optional) forced state
  */
 PSVUtils.toggleClass = function(element, className, active) {
   if (active === undefined) {
@@ -91,6 +91,34 @@ PSVUtils.toggleClass = function(element, className, active) {
   else if (!active) {
     element.classList.remove(className);
   }
+};
+
+/**
+ * Adds one or several CSS classes to an element
+ * @param element (HTMLElement)
+ * @param className (String)
+ */
+PSVUtils.addClasses = function(element, className) {
+  if (!className) {
+    return;
+  }
+  className.split(' ').forEach(function(name) {
+    element.classList.add(name);
+  });
+};
+
+/**
+ * Removes one or several CSS classes to an element
+ * @param element (HTMLElement)
+ * @param className (String)
+ */
+PSVUtils.removeClasses = function(element, className) {
+  if (!className) {
+    return;
+  }
+  className.split(' ').forEach(function(name) {
+    element.classList.remove(name);
+  });
 };
 
 /**
@@ -370,7 +398,7 @@ PSVUtils.parseAngle = function(angle, reference) {
       angle = PSVUtils.TwoPI + angle;
     }
 
-    angle+= reference;
+    angle += reference;
   }
 
   return angle;
@@ -385,6 +413,7 @@ PSVUtils.parseAngle = function(angle, reference) {
  *    - easing (string|function, optional)
  *    - onTick (function(properties))
  *    - onCancel (function)
+ *    - onDone (function)
  * @returns (D.promise) with an additional "cancel" method
  */
 PSVUtils.animation = function(options) {
@@ -429,6 +458,10 @@ PSVUtils.animation = function(options) {
 
       options.onTick(current, 1.0);
 
+      if (options.onDone) {
+        options.onDone();
+      }
+
       defer.resolve();
     }
   }
@@ -447,8 +480,8 @@ PSVUtils.animation = function(options) {
   promise.cancel = function() {
     if (options.onCancel) {
       options.onCancel();
-      defer.reject(defer);
     }
+    defer.reject();
   };
   return promise;
 };
@@ -461,56 +494,34 @@ PSVUtils.animation = function(options) {
 // jscs:disable
 /* jshint ignore:start */
 PSVUtils.animation.easings = {
-  // no easing, no acceleration
   linear: function(t) { return t; },
 
-  // accelerating from zero velocity
   inQuad: function(t) { return t*t; },
-  // decelerating to zero velocity
   outQuad: function(t) { return t*(2-t); },
-  // acceleration until halfway, then deceleration
   inOutQuad: function(t) { return t<.5 ? 2*t*t : -1+(4-2*t)*t; },
 
-  // accelerating from zero velocity
   inCubic: function(t) { return t*t*t; },
-  // decelerating to zero velocity
   outCubic: function(t) { return (--t)*t*t+1; },
-  // acceleration until halfway, then deceleration
   inOutCubic: function(t) { return t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1; },
 
-  // accelerating from zero velocity
   inQuart: function(t) { return t*t*t*t; },
-  // decelerating to zero velocity
   outQuart: function(t) { return 1-(--t)*t*t*t; },
-  // acceleration until halfway, then deceleration
   inOutQuart: function(t) { return t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t; },
 
-  // accelerating from zero velocity
   inQuint: function(t) { return t*t*t*t*t; },
-  // decelerating to zero velocity
   outQuint: function(t) { return 1+(--t)*t*t*t*t; },
-  // acceleration until halfway, then deceleration
   inOutQuint: function(t) { return t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t; },
 
-  // accelerating from zero velocity
   inSine: function(t) { return 1-Math.cos(t*(Math.PI/2)); },
-  // decelerating to zero velocity
   outSine: function(t) { return Math.sin(t*(Math.PI/2)); },
-  // accelerating until halfway, then decelerating
   inOutSine: function(t) { return .5-.5*Math.cos(Math.PI*t); },
 
-  // accelerating from zero velocity
   inExpo: function(t) { return Math.pow(2, 10*(t-1)); },
-  // decelerating to zero velocity
   outExpo: function(t) { return 1-Math.pow(2, -10*t); },
-  // accelerating until halfway, then decelerating
   inOutExpo: function(t) { t=t*2-1; return t<0 ? .5*Math.pow(2, 10*t) : 1-.5*Math.pow(2, -10*t); },
 
-  // accelerating from zero velocity
   inCirc: function(t) { return 1-Math.sqrt(1-t*t); },
-  // decelerating to zero velocity
   outCirc: function(t) { t--; return Math.sqrt(1-t*t); },
-  // acceleration until halfway, then deceleration
   inOutCirc: function(t) { t*=2; return t<1 ? .5-.5*Math.sqrt(1-t*t) : .5+.5*Math.sqrt(1-(t-=2)*t); }
 };
 // jscs:enable
@@ -559,51 +570,52 @@ PSVUtils.throttle = function(func, wait) {
 /**
  * Merge the enumerable attributes of two objects.
  * Modified to replace arrays instead of merge.
+ * Modified to alter the target object.
  * @copyright Nicholas Fisher <nfisher110@gmail.com>"
  * @license MIT
  * @param target (Object)
  * @param src (Object)
- * @return (Object)
+ * @return target (Object)
  */
 PSVUtils.deepmerge = function(target, src) {
-  var array = Array.isArray(src);
-  var dst = array && [] || {};
+  var first = src;
 
-  if (array) {
-    src.forEach(function(e, i) {
-      if (typeof dst[i] === 'undefined') {
-        dst[i] = e;
+  return (function merge(target, src) {
+    if (Array.isArray(src)) {
+      if (!target || !Array.isArray(target)) {
+        target = [];
       }
       else {
-        dst[i] = PSVUtils.deepmerge(null, e);
+        target.length = 0;
       }
-    });
-  }
-  else {
-    if (target && Array.isArray(target)) {
-      target = undefined;
-    }
-    if (target && typeof target === 'object') {
-      Object.keys(target).forEach(function(key) {
-        dst[key] = target[key];
+      src.forEach(function(e, i) {
+        target[i] = merge(null, e);
       });
     }
-    Object.keys(src).forEach(function(key) {
-      if (typeof src[key] !== 'object' || !src[key]) {
-        dst[key] = src[key];
+    else if (typeof src == 'object') {
+      if (!target || Array.isArray(target)) {
+        target = {};
       }
-      else {
-        if (!target[key]) {
-          dst[key] = src[key];
+      Object.keys(src).forEach(function(key) {
+        if (typeof src[key] != 'object' || !src[key]) {
+          target[key] = src[key];
         }
-        else {
-          dst[key] = PSVUtils.deepmerge(target[key], src[key]);
+        else if (src[key] != first) {
+          if (!target[key]) {
+            target[key] = merge(null, src[key]);
+          }
+          else {
+            merge(target[key], src[key]);
+          }
         }
-      }
-    });
-  }
+      });
+    }
+    else {
+      target = src;
+    }
 
-  return dst;
+    return target;
+  }(target, src));
 };
 
 /**
@@ -612,5 +624,5 @@ PSVUtils.deepmerge = function(target, src) {
  * @return (Object)
  */
 PSVUtils.clone = function(src) {
-  return PSVUtils.deepmerge(Array.isArray(src) ? [] : {}, src);
+  return PSVUtils.deepmerge(null, src);
 };

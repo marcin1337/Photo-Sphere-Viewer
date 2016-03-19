@@ -14,7 +14,7 @@ function PSVNavBarCustomButton(navbar, config) {
 PSVNavBarCustomButton.prototype = Object.create(PSVNavBarButton.prototype);
 PSVNavBarCustomButton.prototype.constructor = PSVNavBarCustomButton;
 
-PSVNavBarCustomButton.className = 'psv-button hoverable';
+PSVNavBarCustomButton.className = 'psv-button';
 
 /**
  * Creates the button
@@ -24,7 +24,7 @@ PSVNavBarCustomButton.prototype.create = function() {
   PSVNavBarButton.prototype.create.call(this);
 
   if (this.config.className) {
-    this.container.classList.add(this.config.className);
+    PSVUtils.addClasses(this.container, this.config.className);
   }
 
   if (this.config.title) {

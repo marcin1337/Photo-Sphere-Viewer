@@ -1,4 +1,5 @@
 .psv-hud {
+  @include user-select(none);
   position: absolute;
   z-index: $hud-zindex;
   width: 100%;
@@ -33,7 +34,6 @@
     z-index: $polygon-marker-zindex;
 
     .svg-marker {
-      @include user-select(none);
       cursor: pointer;
       display: none;
 

@@ -74,7 +74,8 @@ PhotoSphereViewer.prototype.render = function(updateDirection) {
     //this.camera.rotation.z = 0;
   }
 
-  this.camera.fov = this.prop.fov;
+  this.camera.aspect = this.prop.aspect;
+  this.camera.fov = this.prop.vFov;
   this.camera.updateProjectionMatrix();
 
   if (this.composer) {
@@ -339,7 +340,8 @@ PhotoSphereViewer.prototype.toggleGyroscopeControl = function() {
  * @param render (boolean) default true
  */
 PhotoSphereViewer.prototype.rotate = function(position, render) {
-  this._cleanPosition(position, true);
+  this._cleanPosition(position);
+  this._applyRanges(position);
 
   this.prop.longitude = position.longitude;
   this.prop.latitude = position.latitude;
@@ -364,7 +366,8 @@ PhotoSphereViewer.prototype.animate = function(position, duration) {
     return;
   }
 
-  this._cleanPosition(position, true);
+  this._cleanPosition(position);
+  this._applyRanges(position);
 
   if (!duration && typeof duration != 'number') {
     // desired radial speed
@@ -418,7 +421,8 @@ PhotoSphereViewer.prototype.stopAnimation = function() {
  */
 PhotoSphereViewer.prototype.zoom = function(level, render) {
   this.prop.zoom_lvl = PSVUtils.stayBetween(Math.round(level), 0, 100);
-  this.prop.fov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
+  this.prop.vFov = this.config.max_fov + (this.prop.zoom_lvl / 100) * (this.config.min_fov - this.config.max_fov);
+  this.prop.hFov = 2 * Math.atan(Math.tan(this.prop.vFov * Math.PI / 180 / 2) * this.prop.aspect) * 180 / Math.PI;
 
   if (render !== false && this.renderer) {
     this.render();

@@ -20,7 +20,8 @@
     }
 
     .psv-button.custom-button {
-      font-size: 18px;
+      font-size: 22px;
+      line-height: 20px;
     }
   </style>
 </head>
@@ -118,8 +119,8 @@
       'fullscreen'
     ],
     caption: 'Bryce Canyon National Park <b>&copy; Mark Doliner</b>',
-    tilt_up_max: Math.PI/4,
-    tilt_down_max: -Math.PI/4,
+    longitude_range: [-7*Math.PI/8, 7*Math.PI/8],
+    latitude_range: [-Math.PI/2, Math.PI/2],
     anim_speed: '-2rpm',
     default_fov: 70,
     move_speed: 1.1,

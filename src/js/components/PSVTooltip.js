@@ -113,7 +113,7 @@ PSVTooltip.prototype.showTooltip = function(config) {
   else {
     t.className = 'psv-tooltip'; // reset the class
     if (config.className) {
-      t.classList.add(config.className);
+      PSVUtils.addClasses(t, config.className);
     }
   }
 

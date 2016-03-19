@@ -237,3 +237,62 @@ describe('PSVUtils::parseSpeed', function() {
     assert.equal(PSVUtils.parseSpeed(Math.PI), Math.PI, Math.PI);
   });
 });
+
+describe('PSVUtils::deepmerge', function() {
+  it('should merge basic plain objects', function() {
+    var one = {a: 'z', b: {c: {d: 'e'}}};
+    var two = {b: {c: {f: 'g', j: 'i'}}};
+
+    var result = PSVUtils.deepmerge(one, two);
+
+    assert.deepEqual(one, {a: 'z', b: {c: {d: 'e', f: 'g', j: 'i'}}});
+    assert.equal(result, one);
+  });
+
+  it('should merge arrays by replace', function() {
+    var one = {a: [1, 2, 3]};
+    var two = {a: [2, 4]};
+
+    var result = PSVUtils.deepmerge(one, two);
+
+    assert.deepEqual(one, {a: [2, 4]});
+    assert.equal(result, one);
+  });
+
+  it('should clone object', function() {
+    var one = {b: {c: {d: 'e'}}};
+
+    var result = PSVUtils.deepmerge(null, one);
+
+    assert.deepEqual(result, {b: {c: {d: 'e'}}});
+    assert.notEqual(result, one);
+    assert.notEqual(result.b.c, one.b.c);
+  });
+
+  it('should clone array', function() {
+    var one = [{a: 'b'}, {c: 'd'}];
+
+    var result = PSVUtils.deepmerge(null, one);
+
+    assert.deepEqual(result, [{a: 'b'}, {c: 'd'}]);
+    assert.notEqual(result[0], one[1]);
+  });
+
+  it('should accept primitives', function() {
+    var one = 'foo';
+    var two = 'bar';
+
+    var result = PSVUtils.deepmerge(one, two);
+
+    assert.equal(result, 'bar');
+  });
+
+  it('should stop on recursion', function() {
+    var one = {a: 'foo'};
+    one.b = one;
+
+    var result = PSVUtils.deepmerge(null, one);
+
+    assert.deepEqual(result, {a: 'foo'});
+  });
+});

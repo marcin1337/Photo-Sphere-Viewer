@@ -190,8 +190,6 @@ PhotoSphereViewer.prototype._setTexture = function(texture) {
  * Creates the 3D scene and GUI components
  */
 PhotoSphereViewer.prototype._createScene = function() {
-  this._onResize();
-
   this.raycaster = new THREE.Raycaster();
 
   // Renderer depends on whether WebGL is supported or not
@@ -253,9 +251,6 @@ PhotoSphereViewer.prototype._createScene = function() {
     this.composer.addPass(this.passes.copy);
     this.composer.addPass(this.passes.blur);
   }
-
-  this._bindEvents();
-  this.trigger('ready');
 };
 
 /**
@@ -362,5 +357,42 @@ PhotoSphereViewer.prototype._transition = function(texture, position) {
       else {
         self.render();
       }
+    });
+};
+
+/**
+ * Reverse autorotate direction with smooth transition
+ */
+PhotoSphereViewer.prototype._reverseAutorotate = function() {
+  var self = this;
+  var newSpeed = -this.config.anim_speed;
+  var range = this.config.longitude_range;
+  this.config.longitude_range = null;
+
+  PSVUtils.animation({
+      properties: {
+        speed: { start: this.config.anim_speed, end: 0 }
+      },
+      duration: 300,
+      easing: 'inSine',
+      onTick: function(properties) {
+        self.config.anim_speed = properties.speed;
+      }
+    })
+    .then(function() {
+      return PSVUtils.animation({
+        properties: {
+          speed: { start: 0, end: newSpeed }
+        },
+        duration: 300,
+        easing: 'outSine',
+        onTick: function(properties) {
+          self.config.anim_speed = properties.speed;
+        }
+      });
+    })
+    .then(function() {
+      self.config.longitude_range = range;
+      self.config.anim_speed = newSpeed;
     });
 };

@@ -19,6 +19,14 @@ PhotoSphereViewer.prototype._bindEvents = function() {
   if (this.config.mousewheel) {
     this.hud.container.addEventListener(PhotoSphereViewer.SYSTEM.mouseWheelEvent, this);
   }
+
+  this.on('_side-reached', function(side) {
+    if (this.isAutorotateEnabled()) {
+      if (side === 'left' || side === 'right') {
+        this._reverseAutorotate();
+      }
+    }
+  });
 };
 
 /**
@@ -49,11 +57,8 @@ PhotoSphereViewer.prototype._onResize = function() {
   if (this.container.clientWidth != this.prop.size.width || this.container.clientHeight != this.prop.size.height) {
     this.prop.size.width = parseInt(this.container.clientWidth);
     this.prop.size.height = parseInt(this.container.clientHeight);
+    this.prop.aspect = this.prop.size.width / this.prop.size.height;
     this.prop.boundingRect = this.container.getBoundingClientRect();
-
-    if (this.camera) {
-      this.camera.aspect = this.prop.size.width / this.prop.size.height;
-    }
 
     if (this.renderer) {
       this.renderer.setSize(this.prop.size.width, this.prop.size.height);
@@ -198,11 +203,10 @@ PhotoSphereViewer.prototype._stopMoveInertia = function(evt) {
     },
     onCancel: function() {
       self.prop.moving = false;
+    },
+    onDone: function() {
+      self.prop.moving = false;
     }
-  });
-
-  this.prop.animation_promise.then(function() {
-    self.prop.moving = false;
   });
 };
 
@@ -218,7 +222,7 @@ PhotoSphereViewer.prototype._click = function(evt) {
   };
 
   if (evt.data) {
-    data = PSVUtils.deepmerge(data, evt.data);
+    PSVUtils.deepmerge(data, evt.data);
   }
 
   var screen = new THREE.Vector2(
@@ -280,11 +284,11 @@ PhotoSphereViewer.prototype._move = function(evt) {
     var x = parseInt(evt.clientX);
     var y = parseInt(evt.clientY);
 
-    var multiplicator = 1 / PhotoSphereViewer.SYSTEM.pixelRatio * this.prop.fov / 100 * Math.PI * this.config.move_speed;
+    var multiplicator = 1 / PhotoSphereViewer.SYSTEM.pixelRatio * Math.PI / 180 * this.config.move_speed;
 
     this.rotate({
-      longitude: this.prop.longitude - (x - this.prop.mouse_x) / this.prop.size.width * multiplicator,
-      latitude: this.prop.latitude + (y - this.prop.mouse_y) / this.prop.size.height * multiplicator
+      longitude: this.prop.longitude - (x - this.prop.mouse_x) / this.prop.size.width * multiplicator * this.prop.hFov,
+      latitude: this.prop.latitude + (y - this.prop.mouse_y) / this.prop.size.height * multiplicator * this.prop.vFov
     });
 
     this.prop.mouse_x = x;

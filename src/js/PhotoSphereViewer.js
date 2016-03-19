@@ -11,7 +11,8 @@ function PhotoSphereViewer(options) {
     PhotoSphereViewer.loadSystem();
   }
 
-  this.config = PSVUtils.deepmerge(PhotoSphereViewer.DEFAULTS, options);
+  this.config = PSVUtils.clone(PhotoSphereViewer.DEFAULTS);
+  PSVUtils.deepmerge(this.config, options);
 
   // check system and config
   if (!options.container) {
@@ -36,23 +37,38 @@ function PhotoSphereViewer(options) {
     }
   }
 
+  if (this.config.longitude_range && this.config.longitude_range.length !== 2) {
+    this.config.longitude_range = null;
+    console.warn('PhotoSphereViewer: longitude_range must have exactly two elements.');
+  }
+
+  if (this.config.latitude_range) {
+    if (this.config.latitude_range.length !== 2) {
+      this.config.latitude_range = null;
+      console.warn('PhotoSphereViewer: latitude_range must have exactly two elements.');
+    }
+    else if (this.config.latitude_range[0] > this.config.latitude_range[1]) {
+      this.config.latitude_range = [this.config.latitude_range[1], this.config.latitude_range[0]];
+      console.warn('PhotoSphereViewer: latitude_range values must be ordered.');
+    }
+  }
+  else if (this.config.tilt_up_max !== undefined || this.config.tilt_down_max !== undefined) {
+    this.config.latitude_range = [
+      this.config.tilt_down_max !== undefined ? this.config.tilt_down_max - Math.PI / 4 : -PSVUtils.HalfPI,
+      this.config.tilt_up_max !== undefined ? this.config.tilt_up_max + Math.PI / 4 : PSVUtils.HalfPI
+    ];
+    console.warn('PhotoSphereViewer: tilt_up_max and tilt_down_max are deprecated, use latitude_range instead.');
+  }
+
   if (this.config.max_fov < this.config.min_fov) {
     this.config.max_fov = PhotoSphereViewer.DEFAULTS.max_fov;
     this.config.min_fov = PhotoSphereViewer.DEFAULTS.min_fov;
-    console.warn('max_fov cannot be lower than min_fov.');
-  }
-
-  if (this.config.tilt_up_max < this.config.tilt_down_max) {
-    this.config.tilt_up_max = PhotoSphereViewer.DEFAULTS.tilt_up_max;
-    this.config.tilt_down_max = PhotoSphereViewer.DEFAULTS.tilt_down_max;
-    console.warn('tilt_up_max cannot be lower than tilt_down_max.');
+    console.warn('PhotoSphereViewer: max_fov cannot be lower than min_fov.');
   }
 
   // normalize config
   this.config.min_fov = PSVUtils.stayBetween(this.config.min_fov, 1, 179);
   this.config.max_fov = PSVUtils.stayBetween(this.config.max_fov, 1, 179);
-  this.config.tilt_up_max = PSVUtils.stayBetween(PSVUtils.parseAngle(this.config.tilt_up_max, -Math.PI), -PSVUtils.HalfPI, PSVUtils.HalfPI);
-  this.config.tilt_down_max = PSVUtils.stayBetween(PSVUtils.parseAngle(this.config.tilt_down_max, -Math.PI), -PSVUtils.HalfPI, PSVUtils.HalfPI);
   if (this.config.default_fov === null) {
     this.config.default_fov = this.config.max_fov / 2 + this.config.min_fov / 2;
   }
@@ -70,6 +86,16 @@ function PhotoSphereViewer(options) {
   this.config.anim_speed = PSVUtils.parseSpeed(this.config.anim_speed);
   if (this.config.caption && !this.config.navbar) {
     this.config.navbar = ['caption'];
+  }
+  if (this.config.longitude_range) {
+    this.config.longitude_range = this.config.longitude_range.map(function(angle) {
+      return PSVUtils.parseAngle(angle);
+    });
+  }
+  if (this.config.latitude_range) {
+    this.config.latitude_range = this.config.latitude_range.map(function(angle) {
+      return PSVUtils.stayBetween(PSVUtils.parseAngle(angle, -Math.PI), -PSVUtils.HalfPI, PSVUtils.HalfPI);
+    });
   }
 
   // references to components
@@ -97,6 +123,9 @@ function PhotoSphereViewer(options) {
     longitude: 0, // current longitude of the center
     anim_speed: 0, // parsed anim speed (rad/sec)
     zoom_lvl: 0, // current zoom level
+    vFov: 0,
+    hFov: 0,
+    aspect: 0,
     moving: false, // is the user moving
     zooming: false, // is the user zooming
 	editing: false,
@@ -133,6 +162,12 @@ function PhotoSphereViewer(options) {
   this.parent.appendChild(this.container);
 
   // apply config
+  if (this.config.size !== null) {
+    this._setViewerSize(this.config.size);
+  }
+
+  this._onResize();
+
   var tempZoom = Math.round((this.config.default_fov - this.config.min_fov) / (this.config.max_fov - this.config.min_fov) * 100);
   this.zoom(tempZoom - 2 * (tempZoom - 50), false);
 
@@ -140,10 +175,6 @@ function PhotoSphereViewer(options) {
     longitude: this.config.default_long,
     latitude: this.config.default_lat
   }, false);
-
-  if (this.config.size !== null) {
-    this._setViewerSize(this.config.size);
-  }
 
   // load components
   if (this.config.navbar) {
@@ -159,6 +190,8 @@ function PhotoSphereViewer(options) {
   this.tooltip = new PSVTooltip(this.hud);
 
   // init
+  this._bindEvents();
+
   if (this.config.autoload) {
     this.load();
   }
@@ -178,6 +211,8 @@ function PhotoSphereViewer(options) {
 
       this.hud.updatePositions();
     }
+
+    this.trigger('ready');
   }.bind(this));
 }
 
@@ -231,8 +266,8 @@ PhotoSphereViewer.DEFAULTS = {
   default_fov: null,
   default_long: 0,
   default_lat: 0,
-  tilt_up_max: PSVUtils.HalfPI,
-  tilt_down_max: -PSVUtils.HalfPI,
+  longitude_range: null,
+  latitude_range: null,
   move_speed: 1,
   time_anim: 2000,
   anim_speed: '2rpm',

@@ -108,9 +108,8 @@ PhotoSphereViewer.prototype.vector3ToSphericalCoords = function(vector) {
 /**
  * Converts x/y to latitude/longitude if present and ensure boundaries
  * @param position (Object)
- * @param useTiltMax (boolean) use "tilt_down_max" and "tilt_up_max" for latitude - default: false
  */
-PhotoSphereViewer.prototype._cleanPosition = function(position, useTiltMax) {
+PhotoSphereViewer.prototype._cleanPosition = function(position) {
   if (position.hasOwnProperty('x') && position.hasOwnProperty('y')) {
     var sphericalCoords = this.textureCoordsToSphericalCoords(position.x, position.y);
     position.longitude = sphericalCoords.longitude;
@@ -118,9 +117,61 @@ PhotoSphereViewer.prototype._cleanPosition = function(position, useTiltMax) {
   }
 
   position.longitude = PSVUtils.parseAngle(position.longitude);
-  position.latitude = PSVUtils.stayBetween(
-    PSVUtils.parseAngle(position.latitude, -Math.PI),
-    useTiltMax ? this.config.tilt_down_max : -PSVUtils.HalfPI,
-    useTiltMax ? this.config.tilt_up_max : PSVUtils.HalfPI
-  );
+  position.latitude = PSVUtils.stayBetween(PSVUtils.parseAngle(position.latitude, -Math.PI), -PSVUtils.HalfPI, PSVUtils.HalfPI);
+};
+
+/**
+ * Apply "longitude_range" and "latitude_range"
+ * @param position
+ */
+PhotoSphereViewer.prototype._applyRanges = function(position) {
+  var range, offset;
+
+  if (this.config.longitude_range) {
+    range = PSVUtils.clone(this.config.longitude_range);
+    offset = this.prop.hFov / 180 * Math.PI / 2;
+
+    range[0] = PSVUtils.parseAngle(range[0] + offset);
+    range[1] = PSVUtils.parseAngle(range[1] - offset);
+
+    if (range[0] > range[1]) { // when the range cross longitude 0
+      if (position.longitude > range[1] && position.longitude < range[0]) {
+        if (position.longitude > (range[0] / 2 + range[1] / 2)) { // detect which side we are closer too
+          position.longitude = range[0];
+          this.trigger('_side-reached', 'left');
+        }
+        else {
+          position.longitude = range[1];
+          this.trigger('_side-reached', 'right');
+        }
+      }
+    }
+    else {
+      if (position.longitude < range[0]) {
+        position.longitude = range[0];
+        this.trigger('_side-reached', 'left');
+      }
+      else if (position.longitude > range[1]) {
+        position.longitude = range[1];
+        this.trigger('_side-reached', 'right');
+      }
+    }
+  }
+
+  if (this.config.latitude_range) {
+    range = PSVUtils.clone(this.config.latitude_range);
+    offset = this.prop.vFov / 180 * Math.PI / 2;
+
+    range[0] = PSVUtils.parseAngle(range[0] + offset, -Math.PI);
+    range[1] = PSVUtils.parseAngle(range[1] - offset, -Math.PI);
+
+    if (position.latitude < range[0]) {
+      position.latitude = range[0];
+      this.trigger('_side-reached', 'bottom');
+    }
+    else if (position.latitude > range[1]) {
+      position.latitude = range[1];
+      this.trigger('_side-reached', 'top');
+    }
+  }
 };
