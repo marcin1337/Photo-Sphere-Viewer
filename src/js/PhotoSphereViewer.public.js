@@ -461,41 +461,7 @@ PhotoSphereViewer.prototype.toggleFullscreen = function() {
   }
 };
 
-/**
- * Adds an event listener
- * If "func" is an object, its "handleEvent" method will be called with an object as paremeter
- *    - type: name of the event prefixed with "psv:"
- *    - args: array of action arguments
- * @param name (string) Action name
- * @param func (Function|Object) The handler function, or an object with an "handleEvent" method
- * @return (PhotoSphereViewer)
- */
-PhotoSphereViewer.prototype.on = function(name, func) {
-  if (!(name in this.actions)) {
-    this.actions[name] = [];
-  }
 
-  this.actions[name].push(func);
-
-  return this;
-};
-
-/**
- * Removes an event listener
- * @param name (string) Action name
- * @param func (Function|Object)
- * @return (PhotoSphereViewer)
- */
-PhotoSphereViewer.prototype.off = function(name, func) {
-  if (name in this.actions) {
-    var idx = this.actions[name].indexOf(func);
-    if (idx !== -1) {
-      this.actions[name].splice(idx, 1);
-    }
-  }
-
-  return this;
-};
 
 PhotoSphereViewer.prototype.ToggleEditMode = function () {
     if (this.prop.editMode) {
@@ -524,25 +490,4 @@ PhotoSphereViewer.prototype._rotateDown = function () {
 PhotoSphereViewer.prototype._rotateUp = function () {
     // Rotates the sphere && Returns to the equator (latitude = 0)
 	this.animate({longitude: this.prop.longitude , latitude: this.prop.latitude + 0.7}, 300);
-};
-/**
- * Triggers an action
- * @param name (string) Action name
- * @param args... (mixed) Arguments to send to the handler functions
- */
-PhotoSphereViewer.prototype.trigger = function(name, args) {
-  args = Array.prototype.slice.call(arguments, 1);
-  if ((name in this.actions) && this.actions[name].length > 0) {
-    this.actions[name].forEach(function(func) {
-      if (typeof func === 'object') {
-        func.handleEvent({
-          type: 'psv:' + name,
-          args: args
-        });
-      }
-      else {
-        func.apply(this, args);
-      }
-    }, this);
-  }
 };
