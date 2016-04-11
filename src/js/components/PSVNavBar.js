@@ -84,8 +84,12 @@ PSVNavBar.prototype.create = function() {
           break;
 
 		case 'scenes':
-		this.items.push(new PSVNavBarScenesButton(this));
-		break;
+		  this.items.push(new PSVNavBarScenesButton(this));
+		  break;
+		
+		case 'sceneInfo':
+		  this.items.push(new PSVNavBarSceneInfoButton(this));
+		  break;
 		  
         case 'spacer':
           button = 'spacer-5';

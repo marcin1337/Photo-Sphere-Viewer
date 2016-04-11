@@ -256,6 +256,7 @@ PhotoSphereViewer.DEFAULTS = {
   panorama: null,
   container: null,
   caption: null,
+  description: null,
   autoload: true,
   usexmpdata: true,
   pano_data: null,

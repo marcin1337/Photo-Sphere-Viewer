@@ -165,7 +165,7 @@ PhotoSphereViewer.prototype.destroy = function() {
  * @param transition (boolean, optional)
  * @return (D.promise)
  */
-PhotoSphereViewer.prototype.setPanorama = function(path, position, transition) {
+PhotoSphereViewer.prototype.setPanorama = function(path, position, transition,description) {
   if (typeof position == 'boolean') {
     transition = position;
     position = undefined;
