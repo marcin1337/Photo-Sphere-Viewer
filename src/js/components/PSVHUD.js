@@ -638,6 +638,9 @@ PSVHUD.prototype._onClick = function(data, e) {
         case "3":
             window.open(marker.psvMarker.link);
             break;
+		case "4":
+			this.psv.trigger('onMarkerChangeSpot',{spotId:marker.psvMarker.spotId,sceneIndex:marker.psvMarker.sceneIndex});
+			break;
 		default:
 			this.psv.panel.showPanel(marker.psvMarker.content);
 			break;
